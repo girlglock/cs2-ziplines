@@ -1,16 +1,13 @@
-import { Instance, CSPlayerPawn } from "cs_script/point_script";
+import { Instance, CSPlayerPawn, PointTemplate, CSPlayerController } from "cs_script/point_script";
 
 const ZIPLINE_CONFIG = {
     MIN_DISTANCE_TO_ZIPLINE: 150,                           // minimum distance to start a zipline interaction while facing one of the interpolated points
 
-    ENABLE_WEAPON_INTERACTION: true,                        // If true, players can use certain weapons to trigger ziplines.
-    ALLOWED_WEAPONS: ["weapon_knife*", "weapon_taser"],     // Weapons allowed for ENABLE_WEAPON_INTERACTION (empty = no requirement, all weapon fire will activate ziplines)
-
-    ENABLE_USE_KEY_INTERACTION: false,                      // [WIP] If true, this will create a func_button on each of the interpolated zipline points.
+    ENABLE_USE_KEY_INTERACTION: true,                       // If true, this will create a func_button on each of the interpolated zipline points.
                                                             // players can press +use to trigger ziplines.
                                                             // (warning: this can lower the fps of the players since you will be adding quite a lot of buttons)
 
-    REQUIRED_ITEM_FOR_USE: [],                              // Items required in inventory for ENABLE_USE_KEY_INTERACTION (empty = no requirement)
+    REQUIRED_ITEM_FOR_USE: [],                              // Items allowed in hand for ENABLE_USE_KEY_INTERACTION (empty = no requirement)
 
     CAN_DROP_FROM_ZIPLINE: true,
     DISMOUNT_FORWARD_VELOCITY_MULTIPLIER: 5,
@@ -35,7 +32,7 @@ const ZIPLINE_CONFIG = {
     FACING_ALIGNMENT_THRESHOLD: 0.5,
     MIN_FACING_DOT_PRODUCT: 0.3,
 
-    DEBUG: true
+    DEBUG: false
 };
 
 class Vector3 {
@@ -94,6 +91,25 @@ class Zipline {
         const magnitude = Math.sqrt(movedir.x * movedir.x + movedir.y * movedir.y + movedir.z * movedir.z);
         const normalizedMovedirZ = magnitude > 0 ? Math.abs(movedir.z) / magnitude : 0;
         this.isVertical = normalizedMovedirZ > ZIPLINE_CONFIG.VERTICAL_THRESHOLD_Z;
+
+
+        const buttonTemplate = Instance.FindEntityByName("ziplineButtonTemplate");
+        if (buttonTemplate instanceof PointTemplate) {
+            const numDebugPoints = 20;
+            for (let i = 0; i <= numDebugPoints; i++) {
+                const t = i / numDebugPoints;
+                const pointOnCurve = this.getPointOnZipline(t);
+
+                const [button] = buttonTemplate.ForceSpawn(pointOnCurve, { pitch: 0, yaw: 0, roll: 0 });
+                Instance.ConnectOutput(button, `OnPressed`, (inputData) => {
+                    if (!(inputData.activator instanceof CSPlayerPawn)) return;
+
+                    const needsItem = ZIPLINE_CONFIG.REQUIRED_ITEM_FOR_USE.length > 0;
+                    if (needsItem && !matchesWeapon(ZIPLINE_CONFIG.REQUIRED_ITEM_FOR_USE, inputData.activator.GetActiveWeapon()?.GetData().GetName())) return;
+                    ziplineManager.activateZipline(inputData.activator);
+                });
+            }
+        }
     }
 
     getPointOnZipline(t) {
@@ -228,7 +244,7 @@ class ZiplineManager {
 
 
     isPlayerCrouching(playerPawn) {
-        return (playerPawn.GetEyePosition().z - playerPawn.GetAbsOrigin().z) < 60;
+        return playerPawn.IsCrouching();
     }
 
     playerHasLineOfSightToZipline(playerPawn, distance, ziplinePos) {
@@ -445,7 +461,7 @@ class ZiplineManager {
                 const reachedEnd = travelDirectionFactor === 1 && ziplineState.currentT >= 1.0;
                 const reachedStart = travelDirectionFactor === -1 && ziplineState.currentT <= 0.0;
 
-                if (reachedEnd || reachedStart || this.isPlayerCrouching(playerPawn)) {
+                if (reachedEnd || reachedStart || playerPawn.IsCrouched()) {
                     this.dismountPlayerFromZipline(playerSlot, playerPawn, playerPos, false);
                 } else {
                     const pointOnLine = zipline.getPointOnZipline(ziplineState.currentT);
@@ -493,6 +509,10 @@ Instance.OnActivate(() => {
     ziplineManager.init();
 });
 
+Instance.OnRoundStart(() => {
+    ziplineManager.init();
+});
+
 Instance.OnReload(() => {
     ziplineManager.init();
 });
@@ -514,29 +534,3 @@ function matchesWeapon(allowed, weapon) {
         return regex.test(weapon);
     });
 }
-
-Instance.OnGunFire((weapon) => {
-    if (!ZIPLINE_CONFIG.ENABLE_WEAPON_INTERACTION) return;
-    const weaponName = weapon?.GetData().GetName();
-    const playerPawn = weapon.GetOwner();
-    if (!playerPawn.IsValid()) return;
-
-    if (ZIPLINE_CONFIG.ALLOWED_WEAPONS.length > 0 && !matchesWeapon(ZIPLINE_CONFIG.ALLOWED_WEAPONS, weaponName)) {
-        return;
-    }
-
-    ziplineManager.activateZipline(playerPawn);
-});
-
-/* Instance.OnGameEvent("+use", (args) => { 
-    if (ZIPLINE_CONFIG.ENABLE_WEAPON_INTERACTION || !ZIPLINE_CONFIG.ENABLE_USE_KEY_INTERACTION) return; 
-    
-    const playerPawn = Instance.GetPlayerController(args.userid).GetPlayerPawn(); 
-    if (!playerPawn.IsValid()) return;
-
-    if (ZIPLINE_CONFIG.REQUIRED_ITEM_FOR_USE.length > 0 && !matchesWeapon(ZIPLINE_CONFIG.REQUIRED_ITEM_FOR_USE, args.weapon)) {
-        return;
-    }
-    
-    ziplineManager.activateZipline(playerPawn); 
-}); */
