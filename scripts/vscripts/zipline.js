@@ -6,9 +6,9 @@ const ZIPLINE_CONFIG = {
     ENABLE_WEAPON_INTERACTION: true,                        // If true, players can use certain weapons to trigger ziplines.
     ALLOWED_WEAPONS: ["weapon_knife*", "weapon_taser"],     // Weapons allowed for ENABLE_WEAPON_INTERACTION (empty = no requirement, all weapon fire will activate ziplines)
 
-    ENABLE_USE_KEY_INTERACTION: false,                      // If true, this will create a func_button on each of the interpolated zipline points.
-    // players can press +use to trigger ziplines.
-    // (warning: this can lower the fps of the players since you will be adding quite a lot of buttons)
+    ENABLE_USE_KEY_INTERACTION: false,                      // [WIP] If true, this will create a func_button on each of the interpolated zipline points.
+                                                            // players can press +use to trigger ziplines.
+                                                            // (warning: this can lower the fps of the players since you will be adding quite a lot of buttons)
 
     REQUIRED_ITEM_FOR_USE: [],                              // Items required in inventory for ENABLE_USE_KEY_INTERACTION (empty = no requirement)
 
@@ -515,13 +515,13 @@ function matchesWeapon(allowed, weapon) {
     });
 }
 
-Instance.OnGameEvent("weapon_fire", (args) => {
+Instance.OnGunFire((weapon) => {
     if (!ZIPLINE_CONFIG.ENABLE_WEAPON_INTERACTION) return;
-
-    const playerPawn = Instance.GetPlayerController(args.userid).GetPlayerPawn();
+    const weaponName = weapon?.GetData().GetName();
+    const playerPawn = weapon.GetOwner();
     if (!playerPawn.IsValid()) return;
 
-    if (ZIPLINE_CONFIG.ALLOWED_WEAPONS.length > 0 && !matchesWeapon(ZIPLINE_CONFIG.ALLOWED_WEAPONS, args.weapon)) {
+    if (ZIPLINE_CONFIG.ALLOWED_WEAPONS.length > 0 && !matchesWeapon(ZIPLINE_CONFIG.ALLOWED_WEAPONS, weaponName)) {
         return;
     }
 
