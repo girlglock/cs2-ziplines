@@ -18,99 +18,6 @@ const QUAKE_PHYSICS = {
     THINK_INTERVAL: 1 / 64,
 };
 
-class Vector {
-    static nullV = { x: 16000, y: 16000, z: 16000 };
-    static zeroV = { x: 0, y: 0, z: 0 };
-
-    static create(x = 0, y = 0, z = 0) {
-        return { x, y, z };
-    }
-
-    static add(a, b) {
-        return { x: a.x + b.x, y: a.y + b.y, z: a.z + b.z };
-    }
-
-    static sub(a, b) {
-        return { x: a.x - b.x, y: a.y - b.y, z: a.z - b.z };
-    }
-
-    static scale(v, s) {
-        return { x: v.x * s, y: v.y * s, z: v.z * s };
-    }
-
-    static dot(a, b) {
-        return a.x * b.x + a.y * b.y + a.z * b.z;
-    }
-
-    static cross(a, b) {
-        return {
-            x: a.y * b.z - a.z * b.y,
-            y: a.z * b.x - a.x * b.z,
-            z: a.x * b.y - a.y * b.x
-        };
-    }
-
-    static length3D(v) {
-        return Math.sqrt(v.x * v.x + v.y * v.y + v.z * v.z);
-    }
-
-    static normalize(v) {
-        const len = this.length3D(v);
-        return len === 0 ? this.zeroV : this.scale(v, 1 / len);
-    }
-
-    static distance(a, b) {
-        return this.length3D(this.sub(a, b));
-    }
-
-    static equals(a, b) {
-        return a.x === b.x && a.y === b.y && a.z === b.z;
-    }
-}
-
-class QAngle {
-    static zero = { pitch: 0, yaw: 0, roll: 0 };
-
-    static create(pitch = 0, yaw = 0, roll = 0) {
-        return { pitch, yaw, roll };
-    }
-
-    static clone(a) {
-        return { pitch: a.pitch, yaw: a.yaw, roll: a.roll };
-    }
-
-    static add(a, b) {
-        return { pitch: a.pitch + b.pitch, yaw: a.yaw + b.yaw, roll: a.roll + b.roll };
-    }
-
-    static sub(a, b) {
-        return { pitch: a.pitch - b.pitch, yaw: a.yaw - b.yaw, roll: a.roll - b.roll };
-    }
-
-    static scale(a, s) {
-        return { pitch: a.pitch * s, yaw: a.yaw * s, roll: a.roll * s };
-    }
-
-    static normalize(a) {
-        return {
-            pitch: this._normalizeAngle(a.pitch),
-            yaw: this._normalizeAngle(a.yaw),
-            roll: this._normalizeAngle(a.roll)
-        };
-    }
-
-    static equals(a, b) {
-        return a.pitch === b.pitch && a.yaw === b.yaw && a.roll === b.roll;
-    }
-
-    static _normalizeAngle(angle) {
-        let a = angle % 360;
-        if (a >= 180) a -= 360;
-        if (a < -180) a += 360;
-        return a;
-    }
-}
-
 class QuakeRocket {
     constructor(owner, startPos, direction, initialVelocity = null) {
         this.owner = owner;
@@ -346,17 +253,16 @@ class RocketLauncher {
 
 const rocketLauncher = new RocketLauncher();
 
-Instance.OnGameEvent("weapon_fire", (args) => {
-    const playerCtrl = Instance.GetPlayerController(args.userid);
-    if (playerCtrl && args.weapon === "weapon_taser") {
-        const playerPawn = playerCtrl.GetPlayerPawn();
+Instance.OnGunFire((weapon) => {
+    if (weapon && weapon.GetData().GetName() === "weapon_taser") {
+        const playerPawn = weapon.GetOwner();
         if (playerPawn) {
             rocketLauncher.fireRocket(playerPawn);
         }
     }
 });
 
-Instance.OnGameEvent("round_start", () => {
+Instance.OnRoundStart(() => {
     rocketLauncher.clearAllRockets();
 });
 
@@ -372,3 +278,96 @@ Instance.OnReload(() => {
 Instance.SetThink(rocketLauncher.update);
 Instance.SetNextThink(QUAKE_PHYSICS.THINK_INTERVAL);
 Instance.Msg("q1 rl loaded...");
+
+class Vector {
+    static nullV = { x: 16000, y: 16000, z: 16000 };
+    static zeroV = { x: 0, y: 0, z: 0 };
+
+    static create(x = 0, y = 0, z = 0) {
+        return { x, y, z };
+    }
+
+    static add(a, b) {
+        return { x: a.x + b.x, y: a.y + b.y, z: a.z + b.z };
+    }
+
+    static sub(a, b) {
+        return { x: a.x - b.x, y: a.y - b.y, z: a.z - b.z };
+    }
+
+    static scale(v, s) {
+        return { x: v.x * s, y: v.y * s, z: v.z * s };
+    }
+
+    static dot(a, b) {
+        return a.x * b.x + a.y * b.y + a.z * b.z;
+    }
+
+    static cross(a, b) {
+        return {
+            x: a.y * b.z - a.z * b.y,
+            y: a.z * b.x - a.x * b.z,
+            z: a.x * b.y - a.y * b.x
+        };
+    }
+
+    static length3D(v) {
+        return Math.sqrt(v.x * v.x + v.y * v.y + v.z * v.z);
+    }
+
+    static normalize(v) {
+        const len = this.length3D(v);
+        return len === 0 ? this.zeroV : this.scale(v, 1 / len);
+    }
+
+    static distance(a, b) {
+        return this.length3D(this.sub(a, b));
+    }
+
+    static equals(a, b) {
+        return a.x === b.x && a.y === b.y && a.z === b.z;
+    }
+}
+
+class QAngle {
+    static zero = { pitch: 0, yaw: 0, roll: 0 };
+
+    static create(pitch = 0, yaw = 0, roll = 0) {
+        return { pitch, yaw, roll };
+    }
+
+    static clone(a) {
+        return { pitch: a.pitch, yaw: a.yaw, roll: a.roll };
+    }
+
+    static add(a, b) {
+        return { pitch: a.pitch + b.pitch, yaw: a.yaw + b.yaw, roll: a.roll + b.roll };
+    }
+
+    static sub(a, b) {
+        return { pitch: a.pitch - b.pitch, yaw: a.yaw - b.yaw, roll: a.roll - b.roll };
+    }
+
+    static scale(a, s) {
+        return { pitch: a.pitch * s, yaw: a.yaw * s, roll: a.roll * s };
+    }
+
+    static normalize(a) {
+        return {
+            pitch: this._normalizeAngle(a.pitch),
+            yaw: this._normalizeAngle(a.yaw),
+            roll: this._normalizeAngle(a.roll)
+        };
+    }
+
+    static equals(a, b) {
+        return a.pitch === b.pitch && a.yaw === b.yaw && a.roll === b.roll;
+    }
+
+    static _normalizeAngle(angle) {
+        let a = angle % 360;
+        if (a >= 180) a -= 360;
+        if (a < -180) a += 360;
+        return a;
+    }
+}
