@@ -5,7 +5,7 @@ const ZIPLINE_CONFIG = {
 
     ENABLE_USE_KEY_INTERACTION: true,                       // If true, this will create a func_button on each of the interpolated zipline points.
                                                             // players can press +use to trigger ziplines.
-                                                            // (warning: this can lower the fps of the players since you will be adding quite a lot of buttons)
+                                                            // (warning: this can lower the fps of the players if you have a lot of ziplines in your map)
 
     REQUIRED_ITEM_FOR_USE: [],                              // Items allowed in hand for ENABLE_USE_KEY_INTERACTION (empty = no requirement)
 
@@ -13,7 +13,7 @@ const ZIPLINE_CONFIG = {
     DISMOUNT_FORWARD_VELOCITY_MULTIPLIER: 5,
     DISMOUNT_UPWARD_VELOCITY: 400,
 
-    SAG_MULTIPLIER: 0.4,
+    SAG_MULTIPLIER: 1,
     DEFAULT_SAG_CURVE: 100,
 
     APPROACH_SPEED: 500,
@@ -92,7 +92,7 @@ class Zipline {
         const normalizedMovedirZ = magnitude > 0 ? Math.abs(movedir.z) / magnitude : 0;
         this.isVertical = normalizedMovedirZ > ZIPLINE_CONFIG.VERTICAL_THRESHOLD_Z;
 
-
+        Instance.EntFireAtName(`ziplineButton_${this.id}`, "Kill");
         const buttonTemplate = Instance.FindEntityByName("ziplineButtonTemplate");
         if (buttonTemplate instanceof PointTemplate) {
             const numDebugPoints = 20;
@@ -108,7 +108,9 @@ class Zipline {
                     if (needsItem && !matchesWeapon(ZIPLINE_CONFIG.REQUIRED_ITEM_FOR_USE, inputData.activator.GetActiveWeapon()?.GetData().GetName())) return;
                     ziplineManager.activateZipline(inputData.activator);
                 });
+                button.SetEntityName(`ziplineButton_${this.id}_${i}`);
             }
+            Instance.Msg(`spawned buttons for zipline ${this.id}`);
         }
     }
 
@@ -182,6 +184,7 @@ class ZiplineManager {
 
     init() {
         Instance.Msg("zipline init");
+        this.ziplines = [];
 
         this.ziplines.length = 0;
         for (const key in this.activeZiplinePlayers) {
@@ -217,30 +220,51 @@ class ZiplineManager {
         if (!this.activeZiplinePlayers[playerSlot]) {
             return;
         }
+
         const ziplineState = this.activeZiplinePlayers[playerSlot];
         const ziplineId = ziplineState.zipline.id;
-        Instance.Msg(`Player ${playerSlot} dismounting from zipline ${ziplineId}.`);
-        Instance.ServerCommand(`snd_sos_start_soundevent_at_pos UIPanorama.weapon_showSolo ${playerFeetPos.x} ${playerFeetPos.y} ${playerFeetPos.z}`);
+
+        Instance.Msg(`Player ${playerSlot} dismounting from zipline ${ziplineId}. Is vertical: ${ziplineState.zipline.isVertical}`);
+        Instance.ServerCommand(
+            `snd_sos_start_soundevent_at_pos UIPanorama.weapon_showSolo ${playerFeetPos.x} ${playerFeetPos.y} ${playerFeetPos.z}`
+        );
+
         const currentVelo = playerPawn.GetAbsVelocity();
         let vx = currentVelo.x;
         let vy = currentVelo.y;
+        let vz = currentVelo.z;
+
         const horizontalSpeed = Math.sqrt(vx * vx + vy * vy);
-        Instance.Msg(ziplineState.zipline.isVertical);
-        const maxSpeed = ziplineState.zipline.isVertical ? ZIPLINE_CONFIG.RIDING_SPEED / 2 : ZIPLINE_CONFIG.RIDING_SPEED;
+        const maxSpeed = ziplineState.zipline.isVertical
+            ? ZIPLINE_CONFIG.RIDING_SPEED / 2
+            : ZIPLINE_CONFIG.RIDING_SPEED;
+
         if (horizontalSpeed > maxSpeed) {
             const scale = maxSpeed / horizontalSpeed;
             vx *= scale;
             vy *= scale;
         }
-        const vz = applyDismountVelocity ? ZIPLINE_CONFIG.DISMOUNT_UPWARD_VELOCITY : currentVelo.z;
-        const dismountVelocity = {
-            x: vx,
-            y: vy,
-            z: vz
-        };
+
+        if (applyDismountVelocity) {
+            if (ziplineState.zipline.isVertical) {
+                const eyeAngles = playerPawn.GetEyeAngles();
+                const dir = Vector3.normalize(Vector3.qAngleToForwardVector(eyeAngles));
+
+                vx = dir.x * ZIPLINE_CONFIG.DISMOUNT_UPWARD_VELOCITY;
+                vy = dir.y * ZIPLINE_CONFIG.DISMOUNT_UPWARD_VELOCITY;
+                vz = dir.z * ZIPLINE_CONFIG.DISMOUNT_UPWARD_VELOCITY;
+                Instance.Msg(`dir: ${dir.x}, ${dir.y}, ${dir.z}`);
+            } else {
+                vz = ZIPLINE_CONFIG.DISMOUNT_UPWARD_VELOCITY;
+            }
+        }
+
+        const dismountVelocity = { x: vx, y: vy, z: vz };
         playerPawn.Teleport(null, null, dismountVelocity);
+
         delete this.activeZiplinePlayers[playerSlot];
     }
+
 
 
     isPlayerCrouching(playerPawn) {
@@ -462,7 +486,7 @@ class ZiplineManager {
                 const reachedStart = travelDirectionFactor === -1 && ziplineState.currentT <= 0.0;
 
                 if (reachedEnd || reachedStart || playerPawn.IsCrouched()) {
-                    this.dismountPlayerFromZipline(playerSlot, playerPawn, playerPos, false);
+                    this.dismountPlayerFromZipline(playerSlot, playerPawn, playerPos, true);
                 } else {
                     const pointOnLine = zipline.getPointOnZipline(ziplineState.currentT);
 
@@ -504,10 +528,6 @@ class ZiplineManager {
 }
 
 const ziplineManager = new ZiplineManager();
-
-Instance.OnActivate(() => {
-    ziplineManager.init();
-});
 
 Instance.OnRoundStart(() => {
     ziplineManager.init();
