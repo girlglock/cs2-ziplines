@@ -340,7 +340,7 @@ class ZiplineManager {
             }
         }
 
-        if (!closestZipline || !this.playerHasLineOfSightToZipline(playerPawn, minDistanceToLine, initialPointOnLine)) {
+        if (!closestZipline || (ZIPLINE_CONFIG.ENABLE_USE_KEY_INTERACTION && !this.playerHasLineOfSightToZipline(playerPawn, minDistanceToLine, initialPointOnLine))) {
             return;
         }
 
@@ -356,7 +356,7 @@ class ZiplineManager {
 
         const facingZiplineDot = Vector3.dotProduct(playerForward, toZipline);
 
-        if (facingZiplineDot < ZIPLINE_CONFIG.MIN_FACING_DOT_PRODUCT) {
+        if ((facingZiplineDot < ZIPLINE_CONFIG.MIN_FACING_DOT_PRODUCT) && ZIPLINE_CONFIG.ENABLE_USE_KEY_INTERACTION) {
             return;
         }
 
