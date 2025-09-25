@@ -35,6 +35,14 @@ const ZIPLINE_CONFIG = {
     DEBUG: false
 };
 
+//this is for when you dont want to use ENABLE_USE_KEY_INTERACTION and want to set up buttons manually
+//youd call the script entity -> RunScriptInput -> ActivateZipline from the button or trigger entity
+Instance.OnScriptInput("ActivateZipline", (context) => {
+    if (context.activator instanceof CSPlayerPawn) {
+        ziplineManager.activateZipline(context.activator);
+    }
+});
+
 class Vector3 {
     static calculateDistance(v1, v2) {
         const dx = v2.x - v1.x;
@@ -219,10 +227,7 @@ class ZiplineManager {
             }
         }
 
-        if (this.ziplines.length === 0) {
-            Instance.SetThink(null);
-        } else {
-            Instance.SetThink(() => this.ziplineThink());
+        if (this.ziplines.length !== 0) {
             Instance.SetNextThink(Instance.GetGameTime() + ZIPLINE_CONFIG.THINK_INTERVAL);
         }
     }
@@ -535,6 +540,7 @@ class ZiplineManager {
 }
 
 const ziplineManager = new ZiplineManager();
+Instance.SetThink(() => ziplineManager.ziplineThink());
 
 Instance.OnRoundStart(() => {
     ziplineManager.init();
@@ -542,12 +548,6 @@ Instance.OnRoundStart(() => {
 
 Instance.OnReload(() => {
     ziplineManager.init();
-});
-
-Instance.OnScriptInput("ActivateZipline", (context) => {
-    if (context.activator) {
-        ziplineManager.activateZipline(context.activator);
-    }
 });
 
 function wildcardToRegex(pattern) {
