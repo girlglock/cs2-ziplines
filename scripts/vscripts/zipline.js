@@ -92,15 +92,26 @@ class Zipline {
         const normalizedMovedirZ = magnitude > 0 ? Math.abs(movedir.z) / magnitude : 0;
         this.isVertical = normalizedMovedirZ > ZIPLINE_CONFIG.VERTICAL_THRESHOLD_Z;
 
+        if (ZIPLINE_CONFIG.ENABLE_USE_KEY_INTERACTION) {
+            this.createZiplineButtons();
+        }
+    }
+
+    createZiplineButtons() {
         Instance.EntFireAtName(`ziplineButton_${this.id}`, "Kill");
         const buttonTemplate = Instance.FindEntityByName("ziplineButtonTemplate");
         if (buttonTemplate instanceof PointTemplate) {
-            const numDebugPoints = 20;
-            for (let i = 0; i <= numDebugPoints; i++) {
-                const t = i / numDebugPoints;
+            const numPoints = 50;
+            for (let i = 0; i <= numPoints; i++) {
+                const t = i / numPoints;
                 const pointOnCurve = this.getPointOnZipline(t);
+                const buttonSpawnPos = {
+                    x: pointOnCurve.x,
+                    y: pointOnCurve.y,
+                    z: pointOnCurve.z + 40
+                };
 
-                const [button] = buttonTemplate.ForceSpawn(pointOnCurve, { pitch: 0, yaw: 0, roll: 0 });
+                const [button] = buttonTemplate.ForceSpawn(buttonSpawnPos, { pitch: 0, yaw: 0, roll: 0 });
                 Instance.ConnectOutput(button, `OnPressed`, (inputData) => {
                     if (!(inputData.activator instanceof CSPlayerPawn)) return;
 
@@ -234,18 +245,18 @@ class ZiplineManager {
         let vy = currentVelo.y;
         let vz = currentVelo.z;
 
-        const horizontalSpeed = Math.sqrt(vx * vx + vy * vy);
-        const maxSpeed = ziplineState.zipline.isVertical
-            ? ZIPLINE_CONFIG.RIDING_SPEED / 2
-            : ZIPLINE_CONFIG.RIDING_SPEED;
-
-        if (horizontalSpeed > maxSpeed) {
-            const scale = maxSpeed / horizontalSpeed;
-            vx *= scale;
-            vy *= scale;
-        }
-
         if (applyDismountVelocity) {
+            const horizontalSpeed = Math.sqrt(vx * vx + vy * vy);
+            const maxSpeed = ziplineState.zipline.isVertical
+                ? ZIPLINE_CONFIG.RIDING_SPEED / 4
+                : ZIPLINE_CONFIG.RIDING_SPEED / 2;
+
+            if (horizontalSpeed > maxSpeed) {
+                const scale = maxSpeed / (horizontalSpeed);
+                vx *= scale;
+                vy *= scale;
+            }
+
             if (ziplineState.zipline.isVertical) {
                 const eyeAngles = playerPawn.GetEyeAngles();
                 const dir = Vector3.normalize(Vector3.qAngleToForwardVector(eyeAngles));
@@ -265,25 +276,21 @@ class ZiplineManager {
         delete this.activeZiplinePlayers[playerSlot];
     }
 
-
-
-    isPlayerCrouching(playerPawn) {
-        return playerPawn.IsCrouching();
-    }
-
     playerHasLineOfSightToZipline(playerPawn, distance, ziplinePos) {
         const trace = Instance.GetTraceHit(
             playerPawn.GetEyePosition(),
             ziplinePos,
-            { ignoreEnt: playerPawn, interacts: 0, sphereRadius: 3 }
+            { ignoreEnt: playerPawn, interacts: 0, sphereRadius: 5 }
         );
 
-        if (!trace.didHit) return true;
+        /* Instance.DebugSphere(trace.end, 5, 60, { r: 255, g: 0, b: 0 });
+        Instance.ServerCommand("say_team " + trace.hitEnt?.GetEntityName()); */
 
-        const minDistance = 5;
-        const hitDistance = Vector3.calculateDistance(trace.end, ziplinePos) || Infinity;
+        if (trace.hitEnt?.GetEntityName().includes("ziplineButton_")) {
+            return true;
+        }
 
-        return hitDistance > minDistance && hitDistance <= distance;
+        return false;
     }
 
     activateZipline(playerPawn) {
