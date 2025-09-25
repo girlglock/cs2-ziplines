@@ -8,10 +8,14 @@ declare module "cs_script/point_script"
      */
     class Domain {
         /** Log a message to the console. */
-        Msg(text: string): void;
-        /** Print some text to the game window. */
-        DebugScreenText(text: string, x: number, y: number, duration: number, color: Color): void;
-        /** Draw a wire spehere in the world. */
+        Msg(text: any): void;
+        /** Print some text to the game window. Only works in dev environments. */
+        DebugScreenText(text: any, x: number, y: number, duration: number, color: Color): void;
+        /** Draw a line in the world. Only works in dev environments. */
+        DebugLine(start: Vector, end: Vector, duration: number, color: Color): void;
+        /** Draw an axis aligned box in the world. Only works in dev environments. */
+        DebugBox(mins: Vector, maxs: Vector, duraiton: number, color: Color): void;
+        /** Draw a wire sphere in the world. Only works in dev environments. */
         DebugSphere(center: Vector, radius: number, duration: number, color: Color): void;
 
         /** Called in Tools mode before the script is reloaded due to changes. A returned value will be passed to the OnReload callback. */
@@ -19,23 +23,35 @@ declare module "cs_script/point_script"
         /** Called in Tools mode after the script reloaded due to changes while. */
         OnReload(callback: (memory: any) => void): void;
 
-        /** Called when the point_script entity is activated */
-        OnActivate(callback: () => void): void;
-        /** Called when known game events are fired. See GameEventDefs for list of known game events. */
-        OnGameEvent<E extends keyof GameEventDefs>(eventName: E, callback: (args: GameEventDefs[E]) => void): void;
-        /** Called input RunScriptInput is triggered on the point_script entity with a value that matches. */
-        OnScriptInput(name: string, callback: (context: EntIOContext) => void): void;
-        /** Called per-think */
+        /** Called per-think. Control when this is run using SetNextThink. */
         SetThink(callback: () => void): void;
-        /** Set when the think callback should next be called */
+        /** Set when the OnThink callback should next be run. The exact time will be the tick nearest to the specified time. Will be within 1/128th of a second, before or after. */
         SetNextThink(time: number): void;
 
-        /** Fire the input on all targets matching the specified name. */
-        EntFireAtName(name: string, input: string, value?: EntIOValue, delay?: number): void;
+        /** Called when the point_script entity is activated */
+        OnActivate(callback: () => void): void;
+        /** Called when input RunScriptInput is triggered on the point_script entity with a parameter value that matches name. */
+        OnScriptInput(name: string, callback: (inputData: { caller?: Entity, activator?: Entity }) => void): void;
+        OnPlayerConnect(callback: (player: CSPlayerController) => void): void;
+        OnPlayerActivate(callback: (player: CSPlayerController) => void): void;
+        OnPlayerDisconnect(callback: (playerSlot: number) => void): void;
+        OnRoundStart(callback: () => void): void;
+        OnRoundEnd(callback: (winningTeam: number) => void): void;
+        OnBombPlant(callback: (c4: Entity, planter: CSPlayerPawn) => void): void;
+        OnBombDefuse(callback: (c4: Entity, defuser: CSPlayerPawn) => void): void;
+        OnPlayerKill(callback: (victim: CSPlayerPawn, info: { weapon?: CSWeaponBase, attacker?: Entity, inflictor?: Entity }) => void): void;
+        OnPlayerChat(callback: (speaker: CSPlayerController, team: number, text: string) => void): void;
+        OnGunFire(callback: (weapon: CSWeaponBase) => void): void;
+        OnGrenadeThrow(callback: (weapon: CSWeaponBase, projectile: Entity) => void): void;
+
+        /** Fire the input on all targets matching the specified names. */
+        EntFireAtName(name: string, input: string, value?: InputValue, delay?: number): void;
+        EntFireAtName(name: string, input: string, inputData?: InputData, delay?: number): void;
         /** Fire the input on the specified target. */
-        EntFireAtTarget(target: Entity, input: string, value?: EntIOValue, delay?: number): void;
+        EntFireAtTarget(target: Entity, input: string, value?: InputValue, delay?: number): void;
+        EntFireAtTarget(target: Entity, input: string, inputData?: InputData, delay?: number): void;
         /** Connect the output of an entity to a callback. The return value is a connection id that can be used in `DisconnectOutput` */
-        ConnectOutput(target: Entity, output: string, callback: (arg: EntIOValue, context: EntIOContext) => any): number | undefined;
+        ConnectOutput(target: Entity, output: string, callback: (inputData: InputData) => any): number | undefined;
         /** Find entities by name. */
         DisconnectOutput(connectionId: number): void;
 
@@ -48,7 +64,7 @@ declare module "cs_script/point_script"
         /** Find entities of the specified class name. */
         FindEntitiesByClass(className: string): Entity[];
         /** Get the player controller in the given slot. */
-        GetPlayerController(slot: number): CSPlayerController | undefined;
+        GetPlayerController(playerSlot: number): CSPlayerController | undefined;
 
         /** Trace along a line and detect collisions */
         GetTraceHit(start: Vector, end: Vector, config?: TraceConfig): TraceResult;
@@ -67,7 +83,7 @@ declare module "cs_script/point_script"
         GetRoundsPlayed(): number;
 
         /** Issue the specified command to the specified client. */
-        ClientCommand(slot: number, command: string): void;
+        ClientCommand(playerSlot: number, command: string): void;
         /** Issue a command. */
         ServerCommand(command: string): void;
     }
@@ -75,8 +91,8 @@ declare module "cs_script/point_script"
     type Vector = { x: number, y: number, z: number };
     type QAngle = { pitch: number, yaw: number, roll: number };
     type Color = { r: number, g: number, b: number, a?: number };
-    type EntIOValue = boolean | number | string | Vector | Color | undefined;
-    type EntIOContext = { caller?: Entity, activator?: Entity  };
+    type InputValue = boolean | number | string | Vector | Color | undefined;
+    type InputData = { value?: InputValue, caller?: Entity, activator?: Entity };
     interface TraceConfig {
         ignoreEnt?: Entity, // Set to ignore collisions with an entity, typically the source of a trace
         interacts?: TraceInteracts, // Defaults to trace against any solid
@@ -86,7 +102,8 @@ declare module "cs_script/point_script"
         fraction: number;
         end: Vector;
         didHit: boolean;
-        hitEnt?: Entity | null;
+        normal: Vector;
+        hitEnt?: Entity;
     }
 
     enum CSWeaponType {
@@ -116,19 +133,7 @@ declare module "cs_script/point_script"
 
     enum TraceInteracts {
         SOLID = 0,
-        WORLD = 1
-
-    }
-
-    interface GameEventDefs {
-        player_activate: { userid: number };
-        player_connect: { userid: number, name: string, bot: boolean };
-        player_disconnect: { userid: number, reason: number };
-        player_death: { userid: number, attacker: number };
-        round_start: { round_number: number };
-        round_end: { winner: number };
-        bomb_planted: { userid: number };
-        bomb_defused: { userid: number };
+        WORLD = 1,
     }
 
     export class Entity {
@@ -150,6 +155,7 @@ declare module "cs_script/point_script"
         SetHealth(health: number): void;
         GetMaxHealth(): number;
         SetMaxHealth(health: number): void;
+        GetGroundEntity(): Entity | undefined;
         Kill(): void;
         Remove(): void;
     }
@@ -164,6 +170,7 @@ declare module "cs_script/point_script"
 
     export class CSWeaponBase extends BaseModelEntity {
         GetData(): CSWeaponData;
+        GetOwner(): CSPlayerPawn | undefined;
     }
 
     export class CSWeaponData {
@@ -174,6 +181,7 @@ declare module "cs_script/point_script"
 
     export class CSPlayerController extends Entity {
         GetPlayerSlot(): number;
+        GetPlayerName(): string;
         GetPlayerPawn(): CSPlayerPawn | undefined;
         GetObserverPawn(): CSObserverPawn | undefined;
         GetScore(): number;
@@ -187,22 +195,31 @@ declare module "cs_script/point_script"
     }
 
     export class CSObserverPawn extends BaseModelEntity {
+        /** Gets the controller currently controlling this player pawn. */
         GetPlayerController(): CSPlayerController | undefined;
+        /** Gets the controller that this player pawn was originally spawned for. */
+        GetOriginalPlayerController(): CSPlayerController;
         GetObserverMode(): number;
         SetObserverMode(nMode: number): void;
     }
 
     export class CSPlayerPawn extends BaseModelEntity {
+        /** Gets the controller currently controlling this player pawn. */
         GetPlayerController(): CSPlayerController | undefined;
+        /** Gets the controller that this player pawn was originally spawned for. */
+        GetOriginalPlayerController(): CSPlayerController;
         FindWeapon(name: string): CSWeaponBase | undefined;
         FindWeaponBySlot(slot: CSGearSlot): CSWeaponBase | undefined;
         GetActiveWeapon(): CSWeaponBase | undefined;
-        DestroyWeapon(target: CSWeaponBase | undefined): void;
+        DestroyWeapon(target: CSWeaponBase): void;
         DestroyWeapons(): void;
-        SwitchToWeapon(target: CSWeaponBase | undefined): void;
+        SwitchToWeapon(target: CSWeaponBase): void;
         GiveNamedItem(name: string, autoDeploy?: boolean): void;
         GetArmor(): number;
         SetArmor(value: number): void;
+        IsCrouching(): boolean;
+        IsCrouched(): boolean;
+        IsNoclipping(): boolean;
     }
 
     export class PointTemplate extends Entity {
