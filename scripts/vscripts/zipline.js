@@ -298,9 +298,9 @@ class ZiplineManager {
 
         const playerSlot = playerController.GetPlayerSlot();
 
-        if (this.activeZiplinePlayers[playerSlot]) {
+        if (this.activeZiplinePlayers[playerSlot] && ZIPLINE_CONFIG.CAN_DROP_FROM_ZIPLINE) {
             const playerFeetPos = playerPawn.GetAbsOrigin();
-            this.dismountPlayerFromZipline(playerSlot, playerPawn, playerFeetPos, ZIPLINE_CONFIG.CAN_DROP_FROM_ZIPLINE);
+            this.dismountPlayerFromZipline(playerSlot, playerPawn, playerFeetPos, true);
             return;
         }
 
@@ -486,7 +486,7 @@ class ZiplineManager {
                 const reachedStart = travelDirectionFactor === -1 && ziplineState.currentT <= 0.0;
 
                 if (reachedEnd || reachedStart || playerPawn.IsCrouched()) {
-                    this.dismountPlayerFromZipline(playerSlot, playerPawn, playerPos, true);
+                    this.dismountPlayerFromZipline(playerSlot, playerPawn, playerPos, zipline.isVertical);
                 } else {
                     const pointOnLine = zipline.getPointOnZipline(ziplineState.currentT);
 
