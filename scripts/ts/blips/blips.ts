@@ -30,7 +30,7 @@ export class Blips {
      * @param text the message text, supports color tags like {red}, {green}, etc
      * @param soundName optional soundevent to play when message is added
      */
-    print(text: string, soundName?: string, soundPos?: Vector) {
+    print(text: string, soundName: string = Blips.beepSound , soundPos?: Vector) {
         const gameTime = css.GetGameTime();
         const messageId = this.nextMessageId++;
 
@@ -182,4 +182,5 @@ export class Blips {
     private static easeInCubic(t: number): number {
         return t * t * t;
     }
+
 }
