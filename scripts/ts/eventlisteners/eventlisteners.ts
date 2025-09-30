@@ -1,5 +1,9 @@
-//to be used with https://github.com/Source2ZE/cs_script_boilerplate
-//see scripts/ts/game_events_test.ts for examples
+// to be used with https://github.com/Source2ZE/cs_script_boilerplate
+//
+// requires the maps/prefabs/eventlisteners.vmap prefab
+// (if not worky paste the ents into main map since hammer likes to alter the targetnames inside prefabs)
+//
+// see scripts/ts/game_events_test.ts for examples
 
 import { Instance as css } from "cs_script/point_script";
 
