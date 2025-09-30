@@ -3,8 +3,15 @@ import { EventListeners } from '../eventlisteners/eventlisteners';
 import { Blips } from "../blips/blips";
 import { HitGroup } from "../enums/hitgroups";
 
-EventListeners.RegisterAll();
 const blips = new Blips();
+
+css.OnActivate(() => {
+    EventListeners.RegisterAll();
+});
+
+css.OnReload(() => {
+    EventListeners.RegisterAll();
+});
 
 //kick the host if they try to change a nono cvar
 EventListeners.OnServerCvar((data) => {
