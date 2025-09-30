@@ -1,4 +1,6 @@
 import { Instance as css } from "cs_script/point_script";
+import {EventListeners} from '../eventlisteners/eventlisteners';
+import { HitGroup } from "../enums/hitgroups";
 
 EventListeners.RegisterAll();
 
@@ -22,5 +24,7 @@ EventListeners.OnServerCvar((data) => {
 
 //print hurt data
 EventListeners.OnPlayerHurt((data) => {
-    css.Msg(`player ${css.GetPlayerController(data.userid)?.GetPlayerName()} was hit by ${css.GetPlayerController(data.attacker)?.GetPlayerName()} for -${data.dmg_health} HP and -${data.dmg_armor} amor`);
+    const attackerCtrl = css.GetPlayerController(data.attacker);
+    const victimCtrl = css.GetPlayerController(data.userid);
+    css.Msg(`${attackerCtrl?.GetPlayerName()} -> ${data.weapon} ->  ${victimCtrl?.GetPlayerName()} (${HitGroup[data.hitgroup]}) | DMG: HP${data.dmg_health} ARMOR${data.dmg_armor} | LEFT: HP${data.health} ARMOR: ${data.armor}`);
 });
