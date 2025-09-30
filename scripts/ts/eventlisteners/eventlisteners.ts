@@ -1,11 +1,1177 @@
-// to be used with https://github.com/Source2ZE/cs_script_boilerplate
-//
-// requires the maps/prefabs/eventlisteners.vmap prefab
-// (if not worky paste the ents into main map since hammer likes to alter the targetnames inside prefabs)
-//
-// see scripts/ts/game_events_test.ts for examples
-
 import { Instance as css } from "cs_script/point_script";
+
+interface GameEventDefs {
+    server_spawn: {
+        hostname: string;
+        address: string;
+        port: number;
+        game: string;
+        mapname: string;
+        addonname: string;
+        maxplayers: number;
+        os: string;
+        dedicated: boolean;
+        password: boolean;
+    };
+    server_pre_shutdown: {
+        reason: string;
+    };
+    server_shutdown: {
+        reason: string;
+    };
+    server_message: {
+        text: string;
+    };
+    server_cvar: {
+        cvarname: string;
+        cvarvalue: string;
+    };
+    player_activate: {
+        userid: number;
+    };
+    player_connect_full: {
+        userid: number;
+    };
+    player_full_update: {
+        userid: number;
+        count: number;
+    };
+    player_connect: {
+        name: string;
+        userid: number;
+        networkid: string;
+        xuid: string;
+        address: string;
+        bot: boolean;
+    };
+    player_disconnect: {
+        userid: number;
+        reason: number;
+        name: string;
+        networkid: string;
+        xuid: string;
+        PlayerID: number;
+    };
+    player_info: {
+        name: string;
+        userid: number;
+        steamid: string;
+        bot: boolean;
+    };
+    player_spawn: {
+        userid: number;
+        userid_pawn: number;
+    };
+    player_team: {
+        userid: number;
+        team: number;
+        oldteam: number;
+        disconnect: boolean;
+        silent: boolean;
+        isbot: boolean;
+        userid_pawn: number;
+    };
+    local_player_team: {};
+    local_player_controller_team: {};
+    player_changename: {
+        userid: number;
+        oldname: string;
+        newname: string;
+    };
+    player_hurt: {
+        userid: number;
+        attacker: number;
+        health: number;
+        armor: number;
+        weapon: string;
+        dmg_health: number;
+        dmg_armor: number;
+        hitgroup: number;
+        userid_pawn: number;
+        attacker_pawn: number;
+    };
+    player_chat: {
+        teamonly: boolean;
+        userid: number;
+        text: string;
+    };
+    local_player_pawn_changed: {};
+    player_stats_updated: {
+        forceupload: boolean;
+    };
+    player_death: {
+        userid: number;
+        attacker: number;
+        assister: number;
+        assistedflash: boolean;
+        weapon: string;
+        weapon_itemid: string;
+        weapon_fauxitemid: string;
+        weapon_originalowner_xuid: string;
+        headshot: boolean;
+        dominated: number;
+        revenge: number;
+        wipe: number;
+        penetrated: number;
+        noreplay: boolean;
+        noscope: boolean;
+        thrusmoke: boolean;
+        attackerblind: boolean;
+        distance: number;
+        userid_pawn: number;
+        attacker_pawn: number;
+        assister_pawn: number;
+        dmg_health: number;
+        dmg_armor: number;
+        hitgroup: number;
+        attackerinair: boolean;
+    };
+    player_footstep: {
+        userid: number;
+        userid_pawn: number;
+    };
+    player_hintmessage: {
+        hintmessage: string;
+    };
+    player_spawned: {
+        userid: number;
+        inrestart: boolean;
+        userid_pawn: number;
+    };
+    player_jump: {
+        userid: number;
+    };
+    player_blind: {
+        userid: number;
+        attacker: number;
+        entityid: number;
+        blind_duration: number;
+    };
+    player_falldamage: {
+        userid: number;
+        damage: number;
+        userid_pawn: number;
+    };
+    player_score: {
+        userid: number;
+        kills: number;
+        deaths: number;
+        score: number;
+    };
+    player_shoot: {
+        userid: number;
+        weapon: number;
+        mode: number;
+        userid_pawn: number;
+    };
+    player_radio: {
+        splitscreenplayer: number;
+        userid: number;
+        slot: number;
+        userid_pawn: number;
+    };
+    player_avenged_teammate: {
+        avenger_id: number;
+        avenged_player_id: number;
+    };
+    player_reset_vote: {
+        userid: number;
+        vote: boolean;
+    };
+    player_given_c4: {
+        userid: number;
+    };
+    player_ping: {
+        splitscreenplayer: number;
+        userid: number;
+        entityid: number;
+        x: number;
+        y: number;
+        z: number;
+        urgent: boolean;
+        userid_pawn: number;
+    };
+    player_ping_stop: {
+        entityid: number;
+    };
+    player_sound: {
+        userid: number;
+        radius: number;
+        duration: number;
+        step: boolean;
+        userid_pawn: number;
+    };
+    teamplay_broadcast_audio: {
+        team: number;
+        sound: string;
+    };
+    team_info: {
+        teamid: number;
+        teamname: string;
+    };
+    team_score: {
+        teamid: number;
+        score: number;
+    };
+    teamplay_round_start: {
+        full_reset: boolean;
+    };
+    team_intro_start: {};
+    team_intro_end: {};
+    round_start: {
+        timelimit: number;
+        fraglimit: number;
+        objective: string;
+    };
+    round_end: {
+        winner: number;
+        reason: number;
+        message: string;
+        legacy: number;
+        player_count: number;
+        nomusic: number;
+    };
+    round_start_pre_entity: {};
+    round_start_post_nav: {};
+    round_freeze_end: {};
+    round_prestart: {};
+    round_poststart: {};
+    round_announce_match_point: {};
+    round_announce_final: {};
+    round_announce_last_round_half: {};
+    round_announce_match_start: {};
+    round_announce_warmup: {};
+    round_end_upload_stats: {};
+    round_officially_ended: {};
+    round_time_warning: {};
+    round_mvp: {
+        userid: number;
+        reason: number;
+        value: number;
+        musickitmvps: number;
+        nomusic: number;
+        musickitid: number;
+    };
+    game_init: {};
+    game_start: {
+        roundslimit: number;
+        timelimit: number;
+        fraglimit: number;
+        objective: string;
+    };
+    game_end: {
+        winner: number;
+    };
+    game_message: {
+        target: number;
+        text: string;
+    };
+    game_newmap: {
+        mapname: string;
+    };
+    game_phase_changed: {
+        new_phase: number;
+    };
+    hltv_cameraman: {
+        userid: number;
+    };
+    hltv_chase: {
+        target1: number;
+        target2: number;
+        distance: number;
+        theta: number;
+        phi: number;
+        inertia: number;
+        ineye: number;
+    };
+    hltv_rank_camera: {
+        index: number;
+        rank: number;
+        target: number;
+    };
+    hltv_rank_entity: {
+        userid: number;
+        rank: number;
+        target: number;
+    };
+    hltv_fixed: {
+        posx: number;
+        posy: number;
+        posz: number;
+        theta: number;
+        phi: number;
+        offset: number;
+        fov: number;
+        target: number;
+    };
+    hltv_message: {
+        text: string;
+    };
+    hltv_status: {
+        clients: number;
+        slots: number;
+        proxies: number;
+        master: string;
+    };
+    hltv_title: {
+        text: string;
+    };
+    hltv_chat: {
+        text: string;
+        steamID: string;
+    };
+    hltv_versioninfo: {
+        version: number;
+    };
+    hltv_replay: {
+        delay: number;
+        reason: number;
+    };
+    hltv_changed_mode: {
+        oldmode: number;
+        newmode: number;
+        obs_target: number;
+    };
+    hltv_replay_status: {
+        reason: number;
+    };
+    demo_start: {};
+    demo_stop: {};
+    demo_skip: {
+        playback_tick: number;
+        skipto_tick: number;
+    };
+    map_shutdown: {};
+    map_transition: {};
+    hostname_changed: {
+        hostname: string;
+    };
+    difficulty_changed: {
+        newDifficulty: number;
+        oldDifficulty: number;
+        strDifficulty: string;
+    };
+    weapon_fire: {
+        userid: number;
+        weapon: string;
+        silenced: boolean;
+        userid_pawn: number;
+    };
+    weapon_fire_on_empty: {
+        userid: number;
+        weapon: string;
+        userid_pawn: number;
+    };
+    weapon_outofammo: {
+        userid: number;
+        userid_pawn: number;
+    };
+    weapon_reload: {
+        userid: number;
+        userid_pawn: number;
+    };
+    weapon_zoom: {
+        userid: number;
+        userid_pawn: number;
+    };
+    weapon_zoom_rifle: {
+        userid: number;
+        userid_pawn: number;
+    };
+    grenade_thrown: {
+        userid: number;
+        weapon: string;
+        userid_pawn: number;
+    };
+    grenade_bounce: {
+        userid: number;
+        userid_pawn: number;
+    };
+    hegrenade_detonate: {
+        userid: number;
+        entityid: number;
+        x: number;
+        y: number;
+        z: number;
+        userid_pawn: number;
+    };
+    flashbang_detonate: {
+        userid: number;
+        entityid: number;
+        x: number;
+        y: number;
+        z: number;
+        userid_pawn: number;
+    };
+    smokegrenade_detonate: {
+        userid: number;
+        entityid: number;
+        x: number;
+        y: number;
+        z: number;
+        userid_pawn: number;
+    };
+    smokegrenade_expired: {
+        userid: number;
+        entityid: number;
+        x: number;
+        y: number;
+        z: number;
+        userid_pawn: number;
+    };
+    molotov_detonate: {
+        userid: number;
+        x: number;
+        y: number;
+        z: number;
+        userid_pawn: number;
+    };
+    decoy_detonate: {
+        userid: number;
+        entityid: number;
+        x: number;
+        y: number;
+        z: number;
+        userid_pawn: number;
+    };
+    decoy_started: {
+        userid: number;
+        entityid: number;
+        x: number;
+        y: number;
+        z: number;
+        userid_pawn: number;
+    };
+    decoy_firing: {
+        userid: number;
+        entityid: number;
+        x: number;
+        y: number;
+        z: number;
+        userid_pawn: number;
+    };
+    tagrenade_detonate: {
+        userid: number;
+        entityid: number;
+        x: number;
+        y: number;
+        z: number;
+    };
+    inferno_startburn: {
+        entityid: number;
+        x: number;
+        y: number;
+        z: number;
+    };
+    inferno_expire: {
+        entityid: number;
+        x: number;
+        y: number;
+        z: number;
+    };
+    inferno_extinguish: {
+        entityid: number;
+        x: number;
+        y: number;
+        z: number;
+    };
+    bomb_beginplant: {
+        userid: number;
+        site: number;
+        userid_pawn: number;
+    };
+    bomb_abortplant: {
+        userid: number;
+        site: number;
+        userid_pawn: number;
+    };
+    bomb_planted: {
+        userid: number;
+        site: number;
+        userid_pawn: number;
+    };
+    bomb_begindefuse: {
+        userid: number;
+        haskit: boolean;
+        userid_pawn: number;
+    };
+    bomb_abortdefuse: {
+        userid: number;
+        userid_pawn: number;
+    };
+    bomb_defused: {
+        userid: number;
+        site: number;
+        userid_pawn: number;
+    };
+    bomb_exploded: {
+        userid: number;
+        site: number;
+        userid_pawn: number;
+    };
+    bomb_dropped: {
+        userid: number;
+        entindex: number;
+        userid_pawn: number;
+    };
+    bomb_pickup: {
+        userid: number;
+        userid_pawn: number;
+    };
+    bomb_beep: {
+        entindex: number;
+    };
+    defuser_dropped: {
+        entityid: number;
+    };
+    defuser_pickup: {
+        entityid: number;
+        userid: number;
+        userid_pawn: number;
+    };
+    hostage_follows: {
+        userid: number;
+        hostage: number;
+        userid_pawn: number;
+    };
+    hostage_hurt: {
+        userid: number;
+        hostage: number;
+        userid_pawn: number;
+    };
+    hostage_killed: {
+        userid: number;
+        hostage: number;
+        userid_pawn: number;
+    };
+    hostage_rescued: {
+        userid: number;
+        hostage: number;
+        site: number;
+        userid_pawn: number;
+    };
+    hostage_stops_following: {
+        userid: number;
+        hostage: number;
+        userid_pawn: number;
+    };
+    hostage_rescued_all: {};
+    hostage_call_for_help: {
+        hostage: number;
+    };
+    vip_escaped: {
+        userid: number;
+    };
+    vip_killed: {
+        userid: number;
+        attacker: number;
+    };
+    item_purchase: {
+        userid: number;
+        team: number;
+        loadout: number;
+        weapon: string;
+    };
+    item_pickup: {
+        userid: number;
+        item: string;
+        silent: boolean;
+        defindex: number;
+    };
+    item_pickup_slerp: {
+        userid: number;
+        index: number;
+        behavior: number;
+    };
+    item_pickup_failed: {
+        userid: number;
+        item: string;
+        reason: number;
+        limit: number;
+    };
+    item_remove: {
+        userid: number;
+        item: string;
+        defindex: number;
+    };
+    item_equip: {
+        userid: number;
+        item: string;
+        defindex: number;
+        canzoom: boolean;
+        hassilencer: boolean;
+        issilenced: boolean;
+        hastracers: boolean;
+        weptype: number;
+        ispainted: boolean;
+    };
+    item_schema_initialized: {};
+    ammo_pickup: {
+        userid: number;
+        item: string;
+        index: number;
+    };
+    ammo_refill: {
+        userid: number;
+        success: boolean;
+    };
+    enter_buyzone: {
+        userid: number;
+        canbuy: boolean;
+    };
+    exit_buyzone: {
+        userid: number;
+        canbuy: boolean;
+    };
+    enter_bombzone: {
+        userid: number;
+        hasbomb: boolean;
+        isplanted: boolean;
+    };
+    exit_bombzone: {
+        userid: number;
+        hasbomb: boolean;
+        isplanted: boolean;
+    };
+    enter_rescue_zone: {
+        userid: number;
+    };
+    exit_rescue_zone: {
+        userid: number;
+    };
+    buytime_ended: {};
+    silencer_off: {
+        userid: number;
+    };
+    silencer_on: {
+        userid: number;
+    };
+    silencer_detach: {
+        userid: number;
+        userid_pawn: number;
+    };
+    buymenu_open: {
+        userid: number;
+    };
+    buymenu_close: {
+        userid: number;
+    };
+    inspect_weapon: {
+        userid: number;
+        userid_pawn: number;
+    };
+    other_death: {
+        otherid: number;
+        othertype: string;
+        attacker: number;
+        weapon: string;
+        weapon_itemid: string;
+        weapon_fauxitemid: string;
+        weapon_originalowner_xuid: string;
+        headshot: boolean;
+        penetrated: number;
+        noscope: boolean;
+        thrusmoke: boolean;
+        attackerblind: boolean;
+    };
+    bullet_impact: {
+        userid: number;
+        x: number;
+        y: number;
+        z: number;
+        userid_pawn: number;
+    };
+    bullet_flight_resolution: {
+        userid: number;
+        userid_pawn: number;
+        pos_x: number;
+        pos_y: number;
+        pos_z: number;
+        ang_x: number;
+        ang_y: number;
+        ang_z: number;
+        start_x: number;
+        start_y: number;
+        start_z: number;
+    };
+    door_close: {
+        userid: number;
+        checkpoint: boolean;
+        userid_pawn: number;
+    };
+    door_moving: {
+        userid: number;
+        entindex: number;
+        userid_pawn: number;
+    };
+    door_break: {
+        entindex: number;
+        dmgstate: number;
+    };
+    door_closed: {
+        userid_pawn: number;
+        entindex: number;
+    };
+    door_open: {
+        userid_pawn: number;
+        entindex: number;
+    };
+    break_breakable: {
+        entindex: number;
+        userid: number;
+        material: number;
+        userid_pawn: number;
+    };
+    break_prop: {
+        entindex: number;
+        userid: number;
+        userid_pawn: number;
+    };
+    broken_breakable: {
+        entindex: number;
+        userid: number;
+        material: number;
+        userid_pawn: number;
+    };
+    entity_killed: {
+        entindex_killed: number;
+        entindex_attacker: number;
+        entindex_inflictor: number;
+        damagebits: number;
+    };
+    entity_visible: {
+        userid: number;
+        subject: number;
+        classname: string;
+        entityname: string;
+    };
+    vote_started: {
+        issue: string;
+        param1: string;
+        team: number;
+        initiator: number;
+    };
+    vote_failed: {
+        team: number;
+    };
+    vote_passed: {
+        details: string;
+        param1: string;
+        team: number;
+    };
+    vote_changed: {
+        vote_option1: number;
+        vote_option2: number;
+        vote_option3: number;
+        vote_option4: number;
+        vote_option5: number;
+        potentialVotes: number;
+    };
+    vote_cast_yes: {
+        team: number;
+        entityid: number;
+    };
+    vote_cast_no: {
+        team: number;
+        entityid: number;
+    };
+    vote_cast: {
+        vote_option: number;
+        team: number;
+        userid: number;
+    };
+    vote_ended: {};
+    vote_options: {
+        count: number;
+        option1: string;
+        option2: string;
+        option3: string;
+        option4: string;
+        option5: string;
+    };
+    start_vote: {
+        userid: number;
+        type: number;
+        vote_parameter: number;
+    };
+    enable_restart_voting: {
+        enable: boolean;
+    };
+    achievement_event: {
+        achievement_name: string;
+        cur_val: number;
+        max_val: number;
+    };
+    achievement_earned: {
+        player: number;
+        achievement: number;
+    };
+    achievement_earned_local: {
+        achievement: number;
+        splitscreenplayer: number;
+    };
+    achievement_write_failed: {};
+    achievement_info_loaded: {};
+    bonus_updated: {
+        numadvanced: number;
+        numbronze: number;
+        numsilver: number;
+        numgold: number;
+    };
+    spec_target_updated: {
+        userid: number;
+        target: number;
+        userid_pawn: number;
+    };
+    spec_mode_updated: {
+        userid: number;
+    };
+    gameinstructor_draw: {};
+    gameinstructor_nodraw: {};
+    instructor_start_lesson: {
+        userid: number;
+        hint_name: string;
+        hint_target: number;
+        vr_movement_type: number;
+        vr_single_controller: boolean;
+        vr_controller_type: number;
+    };
+    instructor_close_lesson: {
+        userid: number;
+        hint_name: string;
+    };
+    instructor_server_hint_create: {
+        userid: number;
+        hint_name: string;
+        hint_replace_key: string;
+        hint_target: number;
+        hint_activator_userid: number;
+        hint_timeout: number;
+        hint_icon_onscreen: string;
+        hint_icon_offscreen: string;
+        hint_caption: string;
+        hint_activator_caption: string;
+        hint_color: string;
+        hint_icon_offset: number;
+        hint_range: number;
+        hint_flags: number;
+        hint_binding: string;
+        hint_gamepad_binding: string;
+        hint_allow_nodraw_target: boolean;
+        hint_nooffscreen: boolean;
+        hint_forcecaption: boolean;
+        hint_local_player_only: boolean;
+    };
+    instructor_server_hint_stop: {
+        hint_name: string;
+    };
+    clientside_lesson_closed: {
+        lesson_name: string;
+    };
+    set_instructor_group_enabled: {
+        group: string;
+        enabled: number;
+    };
+    physgun_pickup: {
+        target: number;
+    };
+    flare_ignite_npc: {
+        entindex: number;
+    };
+    helicopter_grenade_punt_miss: {};
+    finale_start: {
+        rushes: number;
+    };
+    user_data_downloaded: {};
+    read_game_titledata: {
+        controllerId: number;
+    };
+    write_game_titledata: {
+        controllerId: number;
+    };
+    reset_game_titledata: {
+        controllerId: number;
+    };
+    write_profile_data: {};
+    ragdoll_dissolved: {
+        entindex: number;
+    };
+    inventory_updated: {};
+    cart_updated: {};
+    store_pricesheet_updated: {};
+    drop_rate_modified: {};
+    event_ticket_modified: {};
+    gc_connected: {};
+    dynamic_shadow_light_changed: {};
+    gameui_hidden: {};
+    items_gifted: {
+        player: number;
+        itemdef: number;
+        numgifts: number;
+        giftidx: number;
+        accountid: number;
+    };
+    warmup_end: {};
+    announce_phase_end: {};
+    cs_intermission: {};
+    cs_game_disconnected: {};
+    cs_round_final_beep: {};
+    cs_round_start_beep: {};
+    cs_win_panel_round: {
+        show_timer_defend: boolean;
+        show_timer_attack: boolean;
+        timer_time: number;
+        final_event: number;
+        funfact_token: string;
+        funfact_player: number;
+        funfact_data1: number;
+        funfact_data2: number;
+        funfact_data3: number;
+    };
+    cs_win_panel_match: {};
+    cs_match_end_restart: {};
+    cs_pre_restart: {};
+    cs_prev_next_spectator: {
+        next: boolean;
+    };
+    show_deathpanel: {
+        victim: number;
+        killer: number;
+        killer_controller: number;
+        hits_taken: number;
+        damage_taken: number;
+        hits_given: number;
+        damage_given: number;
+        victim_pawn: number;
+    };
+    hide_deathpanel: {};
+    ugc_map_info_received: {
+        published_file_id: string;
+    };
+    ugc_map_unsubscribed: {
+        published_file_id: string;
+    };
+    ugc_map_download_error: {
+        published_file_id: string;
+        error_code: number;
+    };
+    ugc_file_download_finished: {
+        hcontent: string;
+    };
+    ugc_file_download_start: {
+        hcontent: string;
+        published_file_id: string;
+    };
+    begin_new_match: {};
+    match_end_conditions: {
+        frags: number;
+        max_rounds: number;
+        win_rounds: number;
+        time: number;
+    };
+    endmatch_mapvote_selecting_map: {
+        count: number;
+        slot1: number;
+        slot2: number;
+        slot3: number;
+        slot4: number;
+        slot5: number;
+        slot6: number;
+        slot7: number;
+        slot8: number;
+        slot9: number;
+        slot10: number;
+    };
+    endmatch_cmm_start_reveal_items: {};
+    nextlevel_changed: {
+        nextlevel: string;
+        mapgroup: string;
+        skirmishmode: string;
+    };
+    dm_bonus_weapon_start: {
+        time: number;
+        Pos: number;
+    };
+    gg_killed_enemy: {
+        victimid: number;
+        attackerid: number;
+        dominated: number;
+        revenge: number;
+        bonus: boolean;
+    };
+    switch_team: {
+        numPlayers: number;
+        numSpectators: number;
+        avg_rank: number;
+        numTSlotsFree: number;
+        numCTSlotsFree: number;
+    };
+    trial_time_expired: {
+        userid: number;
+    };
+    update_matchmaking_stats: {};
+    client_disconnect: {};
+    client_loadout_changed: {};
+    add_player_sonar_icon: {
+        userid: number;
+        pos_x: number;
+        pos_y: number;
+        pos_z: number;
+    };
+    add_bullet_hit_marker: {
+        userid: number;
+        bone: number;
+        pos_x: number;
+        pos_y: number;
+        pos_z: number;
+        ang_x: number;
+        ang_y: number;
+        ang_z: number;
+        start_x: number;
+        start_y: number;
+        start_z: number;
+        hit: boolean;
+    };
+    sfuievent: {
+        action: string;
+        data: string;
+        slot: number;
+    };
+    weaponhud_selection: {
+        userid: number;
+        mode: number;
+        entindex: number;
+        userid_pawn: number;
+    };
+    tr_player_flashbanged: {
+        userid: number;
+    };
+    tr_mark_complete: {
+        complete: number;
+    };
+    tr_mark_best_time: {
+        time: number;
+    };
+    tr_exit_hint_trigger: {};
+    tr_show_finish_msgbox: {};
+    tr_show_exit_msgbox: {};
+    bot_takeover: {
+        userid: number;
+        botid: number;
+        userid_pawn: number;
+    };
+    jointeam_failed: {
+        userid: number;
+        reason: number;
+    };
+    teamchange_pending: {
+        userid: number;
+        toteam: number;
+    };
+    material_default_complete: {};
+    seasoncoin_levelup: {
+        userid: number;
+        category: number;
+        rank: number;
+    };
+    tournament_reward: {
+        defindex: number;
+        totalrewards: number;
+        accountid: number;
+    };
+    start_halftime: {};
+    player_decal: {
+        userid: number;
+        userid_pawn: number;
+    };
+    survival_announce_phase: {
+        phase: number;
+    };
+    parachute_pickup: {
+        userid: number;
+    };
+    parachute_deploy: {
+        userid: number;
+    };
+    dronegun_attack: {
+        userid: number;
+    };
+    drone_dispatched: {
+        userid: number;
+        priority: number;
+        drone_dispatched: number;
+    };
+    loot_crate_visible: {
+        userid: number;
+        subject: number;
+        type: string;
+    };
+    loot_crate_opened: {
+        userid: number;
+        type: string;
+    };
+    open_crate_instr: {
+        userid: number;
+        subject: number;
+        type: string;
+    };
+    smoke_beacon_paradrop: {
+        userid: number;
+        paradrop: number;
+    };
+    survival_paradrop_spawn: {
+        entityid: number;
+    };
+    survival_paradrop_break: {
+        entityid: number;
+    };
+    drone_cargo_detached: {
+        userid: number;
+        cargo: number;
+        delivered: boolean;
+    };
+    drone_above_roof: {
+        userid: number;
+        cargo: number;
+    };
+    choppers_incoming_warning: {
+        global: boolean;
+    };
+    firstbombs_incoming_warning: {
+        global: boolean;
+    };
+    dz_item_interaction: {
+        userid: number;
+        subject: number;
+        type: string;
+    };
+    survival_teammate_respawn: {
+        userid: number;
+    };
+    survival_no_respawns_warning: {
+        userid: number;
+    };
+    survival_no_respawns_final: {
+        userid: number;
+    };
+    show_survival_respawn_status: {
+        loc_token: string;
+        duration: number;
+        userid: number;
+        userid_pawn: number;
+    };
+    guardian_wave_restart: {};
+    nav_blocked: {
+        area: number;
+        blocked: boolean;
+    };
+    nav_generate: {};
+    repost_xbox_achievements: {
+        splitscreenplayer: number;
+    };
+    mb_input_lock_success: {};
+    mb_input_lock_cancel: {};
+}
 
 export class EventListeners {
     private static registered = false;
@@ -46,2440 +1212,1130 @@ export class EventListeners {
         }
     }
 
-    private static On(eventName: string, callback: (data: any) => void): void {
-        if (!this.handlers.has(eventName)) {
-            this.handlers.set(eventName, []);
+    private static On<K extends keyof GameEventDefs>(eventName: K, callback: (data: GameEventDefs[K]) => void): void {
+        if (!this.handlers.has(eventName as string)) {
+            this.handlers.set(eventName as string, []);
         }
-        this.handlers.get(eventName)!.push(callback);
+        this.handlers.get(eventName as string)!.push(callback as (data: any) => void);
     }
 
-
-    /**
-     * @comment send once a server starts
-     */
-    static OnServerSpawn(callback: (data: {
-        /** @comment public host name */
-        hostname: string;
-        /** @comment hostame, IP or DNS name */
-        address: string;
-        /** @comment server port */
-        port: number;
-        /** @comment game dir */
-        game: string;
-        /** @comment map name */
-        mapname: string;
-        /** @comment addon name */
-        addonname: string;
-        /** @comment max players */
-        maxplayers: number;
-        /** @comment WIN32, LINUX */
-        os: string;
-        /** @comment true if dedicated server */
-        dedicated: boolean;
-        /** @comment true if password protected */
-        password: boolean;
-    }) => void): void {
+    static OnServerSpawn(callback: (data: GameEventDefs["server_spawn"]) => void): void {
         this.On("server_spawn", callback);
     }
 
-    /**
-     * @comment server is about to be shut down
-     */
-    static OnServerPreShutdown(callback: (data: {
-        /** @comment reason why server is about to be shut down */
-        reason: string
-    }) => void): void {
+    static OnServerPreShutdown(callback: (data: GameEventDefs["server_pre_shutdown"]) => void): void {
         this.On("server_pre_shutdown", callback);
     }
 
-    /**
-     * @comment server shut down
-     */
-    static OnServerShutdown(callback: (data: {
-        /** @comment reason why server was shut down */
-        reason: string
-    }) => void): void {
+    static OnServerShutdown(callback: (data: GameEventDefs["server_shutdown"]) => void): void {
         this.On("server_shutdown", callback);
     }
 
-    /**
-     * @comment a generic server message
-     */
-    static OnServerMessage(callback: (data: {
-        /** @comment the message text */
-        text: string
-    }) => void): void {
+    static OnServerMessage(callback: (data: GameEventDefs["server_message"]) => void): void {
         this.On("server_message", callback);
     }
 
-    /**
-     * @comment a server console var has changed
-     */
-    static OnServerCvar(callback: (data: {
-        /** @comment cvar name, eg "mp_roundtime" */
-        cvarname: string;
-        /** @comment new cvar value */
-        cvarvalue: string
-    }) => void): void {
+    static OnServerCvar(callback: (data: GameEventDefs["server_cvar"]) => void): void {
         this.On("server_cvar", callback);
     }
 
-
-    static OnPlayerActivate(callback: (data: {
-        /** @comment user ID on server */
-        userid: number
-    }) => void): void {
+    static OnPlayerActivate(callback: (data: GameEventDefs["player_activate"]) => void): void {
         this.On("player_activate", callback);
     }
 
-    /**
-     * @comment player has sent final message in the connection sequence
-     */
-    static OnPlayerConnectFull(callback: (data: {
-        /** @comment user ID on server (unique on server) */
-        userid: number
-    }) => void): void {
+    static OnPlayerConnectFull(callback: (data: GameEventDefs["player_connect_full"]) => void): void {
         this.On("player_connect_full", callback);
     }
 
-    static OnPlayerFullUpdate(callback: (data: {
-        /** @comment user ID on server */
-        userid: number;
-        /** @comment Number of this full update */
-        count: number
-    }) => void): void {
+    static OnPlayerFullUpdate(callback: (data: GameEventDefs["player_full_update"]) => void): void {
         this.On("player_full_update", callback);
     }
 
-    /**
-     * @comment a new client connected
-     */
-    static OnPlayerConnect(callback: (data: {
-        /** @comment player name */
-        name: string;
-        /** @comment user ID on server (unique on server) */
-        userid: number;
-        /** @comment player network (i.e steam) id */
-        networkid: string;
-        /** @comment steam id */
-        xuid: string;
-        /** @comment ip:port */
-        address: string;
-        bot: boolean;
-    }) => void): void {
+    static OnPlayerConnect(callback: (data: GameEventDefs["player_connect"]) => void): void {
         this.On("player_connect", callback);
     }
 
-    /**
-     * @comment a client was disconnected
-     */
-    static OnPlayerDisconnect(callback: (data: {
-        /** @comment user ID on server */
-        userid: number;
-        /** @comment see networkdisconnect enum protobuf */
-        reason: number;
-        /** @comment player name */
-        name: string;
-        /** @comment player network (i.e steam) id */
-        networkid: string;
-        /** @comment steam id */
-        xuid: string;
-        PlayerID: number;
-    }) => void): void {
+    static OnPlayerDisconnect(callback: (data: GameEventDefs["player_disconnect"]) => void): void {
         this.On("player_disconnect", callback);
     }
 
-    /**
-     * @comment a player changed his name
-     */
-    static OnPlayerInfo(callback: (data: {
-        /** @comment player name */
-        name: string;
-        /** @comment user ID on server (unique on server) */
-        userid: number;
-        /** @comment player network (i.e steam) id */
-        steamid: string;
-        /** @comment true if player is a AI bot */
-        bot: boolean;
-    }) => void): void {
+    static OnPlayerInfo(callback: (data: GameEventDefs["player_info"]) => void): void {
         this.On("player_info", callback);
     }
 
-    /**
-     * @comment player spawned in game
-     */
-    static OnPlayerSpawn(callback: (data: {
-        userid: number;
-        userid_pawn: number
-    }) => void): void {
+    static OnPlayerSpawn(callback: (data: GameEventDefs["player_spawn"]) => void): void {
         this.On("player_spawn", callback);
     }
 
-    /**
-     * @comment player change his team. You can receive this on the client before the local player has updated the team field locally
-     */
-    static OnPlayerTeam(callback: (data: {
-        /** @comment player */
-        userid: number;
-        /** @comment team id */
-        team: number;
-        /** @comment old team id */
-        oldteam: number;
-        /** @comment team change because player disconnects */
-        disconnect: boolean;
-        silent: boolean;
-        /** @comment true if player is a bot */
-        isbot: boolean;
-        userid_pawn: number;
-    }) => void): void {
+    static OnPlayerTeam(callback: (data: GameEventDefs["player_team"]) => void): void {
         this.On("player_team", callback);
     }
 
-    /**
-     * @comment sent only on the client for the local player - happens only after a local players pawn team variable has been updated
-     */
-    static OnLocalPlayerTeam(callback: (data: {}) => void): void {
+    static OnLocalPlayerTeam(callback: (data: GameEventDefs["local_player_team"]) => void): void {
         this.On("local_player_team", callback);
     }
 
-    /**
-     * @comment sent only on the client for the local player - happens only after the local players controller team variable has been updated
-     */
-    static OnLocalPlayerControllerTeam(callback: (data: {}) => void): void {
+    static OnLocalPlayerControllerTeam(callback: (data: GameEventDefs["local_player_controller_team"]) => void): void {
         this.On("local_player_controller_team", callback);
     }
 
-    static OnPlayerChangename(callback: (data: {
-        /** @comment user ID on server */
-        userid: number;
-        /** @comment players old (current) name */
-        oldname: string;
-        /** @comment players new name */
-        newname: string;
-    }) => void): void {
+    static OnPlayerChangename(callback: (data: GameEventDefs["player_changename"]) => void): void {
         this.On("player_changename", callback);
     }
 
-    static OnPlayerHurt(callback: (data: {
-        /** @comment player index who was hurt */
-        userid: number;
-        /** @comment player index who attacked */
-        attacker: number;
-        /** @comment remaining health points */
-        health: number;
-        /** @comment remaining armor points */
-        armor: number;
-        /** @comment weapon name attacker used, if not the world */
-        weapon: string;
-        /** @comment damage done to health */
-        dmg_health: number;
-        /** @comment damage done to armor */
-        dmg_armor: number;
-        /** @comment hitgroup that was damaged */
-        hitgroup: number;
-        userid_pawn: number;
-        attacker_pawn: number;
-    }) => void): void {
+    static OnPlayerHurt(callback: (data: GameEventDefs["player_hurt"]) => void): void {
         this.On("player_hurt", callback);
     }
 
-    /**
-     * @comment a public player chat
-     */
-    static OnPlayerChat(callback: (data: {
-        /** @comment true if team only chat */
-        teamonly: boolean;
-        /** @comment chatting player */
-        userid: number;
-        /** @comment chat text */
-        text: string;
-    }) => void): void {
+    static OnPlayerChat(callback: (data: GameEventDefs["player_chat"]) => void): void {
         this.On("player_chat", callback);
     }
 
-    static OnLocalPlayerPawnChanged(callback: (data: {}) => void): void {
+    static OnLocalPlayerPawnChanged(callback: (data: GameEventDefs["local_player_pawn_changed"]) => void): void {
         this.On("local_player_pawn_changed", callback);
     }
 
-    static OnPlayerStatsUpdated(callback: (data: { forceupload: boolean }) => void): void {
+    static OnPlayerStatsUpdated(callback: (data: GameEventDefs["player_stats_updated"]) => void): void {
         this.On("player_stats_updated", callback);
     }
 
-    /**
-     * @comment a game event, name may be 32 characters long
-     */
-    static OnPlayerDeath(callback: (data: {
-        /** @comment user who died */
-        userid: number;
-        /** @comment player who killed */
-        attacker: number;
-        /** @comment player who assisted in the kill */
-        assister: number;
-        /** @comment assister helped with a flash */
-        assistedflash: boolean;
-        /** @comment weapon name killer used */
-        weapon: string;
-        /** @comment inventory item id of weapon killer used */
-        weapon_itemid: string;
-        /** @comment faux item id of weapon killer used */
-        weapon_fauxitemid: string;
-        weapon_originalowner_xuid: string;
-        /** @comment singals a headshot */
-        headshot: boolean;
-        /** @comment did killer dominate victim with this kill */
-        dominated: number;
-        /** @comment did killer get revenge on victim with this kill */
-        revenge: number;
-        /** @comment is the kill resulting in squad wipe */
-        wipe: number;
-        /** @comment number of objects shot penetrated before killing target */
-        penetrated: number;
-        /** @comment if replay data is unavailable, this will be present and set to false */
-        noreplay: boolean;
-        /** @comment kill happened without a scope, used for death notice icon */
-        noscope: boolean;
-        /** @comment hitscan weapon went through smoke grenade */
-        thrusmoke: boolean;
-        /** @comment attacker was blind from flashbang */
-        attackerblind: boolean;
-        /** @comment distance to victim in meters */
-        distance: number;
-        userid_pawn: number;
-        attacker_pawn: number;
-        assister_pawn: number;
-        /** @comment damage done to health */
-        dmg_health: number;
-        /** @comment damage done to armor */
-        dmg_armor: number;
-        /** @comment hitgroup that was damaged */
-        hitgroup: number;
-        /** @comment attacker was in midair */
-        attackerinair: boolean;
-    }) => void): void {
+    static OnPlayerDeath(callback: (data: GameEventDefs["player_death"]) => void): void {
         this.On("player_death", callback);
     }
 
-    static OnPlayerFootstep(callback: (data: {
-        userid: number;
-        userid_pawn: number
-    }) => void): void {
+    static OnPlayerFootstep(callback: (data: GameEventDefs["player_footstep"]) => void): void {
         this.On("player_footstep", callback);
     }
 
-    static OnPlayerHintmessage(callback: (data: {
-        /** @comment localizable string of a hint */
-        hintmessage: string
-    }) => void): void {
+    static OnPlayerHintmessage(callback: (data: GameEventDefs["player_hintmessage"]) => void): void {
         this.On("player_hintmessage", callback);
     }
 
-    static OnPlayerSpawned(callback: (data: {
-        userid: number;
-        /** @comment true if restart is pending */
-        inrestart: boolean;
-        userid_pawn: number;
-    }) => void): void {
+    static OnPlayerSpawned(callback: (data: GameEventDefs["player_spawned"]) => void): void {
         this.On("player_spawned", callback);
     }
 
-    static OnPlayerJump(callback: (data: { userid: number }) => void): void {
+    static OnPlayerJump(callback: (data: GameEventDefs["player_jump"]) => void): void {
         this.On("player_jump", callback);
     }
 
-    static OnPlayerBlind(callback: (data: {
-        userid: number;
-        /** @comment user ID who threw the flash */
-        attacker: number;
-        /** @comment the flashbang going off */
-        entityid: number;
-        blind_duration: number;
-    }) => void): void {
+    static OnPlayerBlind(callback: (data: GameEventDefs["player_blind"]) => void): void {
         this.On("player_blind", callback);
     }
 
-    static OnPlayerFalldamage(callback: (data: {
-        userid: number;
-        damage: number;
-        userid_pawn: number;
-    }) => void): void {
+    static OnPlayerFalldamage(callback: (data: GameEventDefs["player_falldamage"]) => void): void {
         this.On("player_falldamage", callback);
     }
 
-    /**
-     * @comment players scores changed
-     */
-    static OnPlayerScore(callback: (data: {
-        /** @comment user ID on server */
-        userid: number;
-        /** @comment # of kills */
-        kills: number;
-        /** @comment # of deaths */
-        deaths: number;
-        /** @comment total game score */
-        score: number;
-    }) => void): void {
+    static OnPlayerScore(callback: (data: GameEventDefs["player_score"]) => void): void {
         this.On("player_score", callback);
     }
 
-    /**
-     * @comment player shoot his weapon
-     */
-    static OnPlayerShoot(callback: (data: {
-        /** @comment user ID on server */
-        userid: number;
-        /** @comment weapon ID */
-        weapon: number;
-        /** @comment weapon mode */
-        mode: number;
-        userid_pawn: number;
-    }) => void): void {
+    static OnPlayerShoot(callback: (data: GameEventDefs["player_shoot"]) => void): void {
         this.On("player_shoot", callback);
     }
 
-    static OnPlayerRadio(callback: (data: {
-        userid: number;
-        slot: number;
-        userid_pawn: number;
-    }) => void): void {
+    static OnPlayerRadio(callback: (data: GameEventDefs["player_radio"]) => void): void {
         this.On("player_radio", callback);
     }
 
-    static OnPlayerAvengedTeammate(callback: (data: {
-        avenger_id: number;
-        avenged_player_id: number;
-    }) => void): void {
+    static OnPlayerAvengedTeammate(callback: (data: GameEventDefs["player_avenged_teammate"]) => void): void {
         this.On("player_avenged_teammate", callback);
     }
 
-    static OnPlayerResetVote(callback: (data: { userid: number; vote: boolean }) => void): void {
+    static OnPlayerResetVote(callback: (data: GameEventDefs["player_reset_vote"]) => void): void {
         this.On("player_reset_vote", callback);
     }
 
-    static OnPlayerGivenC4(callback: (data: {
-        /** @comment user ID who received the c4 */
-        userid: number
-    }) => void): void {
+    static OnPlayerGivenC4(callback: (data: GameEventDefs["player_given_c4"]) => void): void {
         this.On("player_given_c4", callback);
     }
 
-    static OnPlayerPing(callback: (data: {
-        userid: number;
-        entityid: number;
-        x: number;
-        y: number;
-        z: number;
-        urgent: boolean;
-        userid_pawn: number;
-    }) => void): void {
+    static OnPlayerPing(callback: (data: GameEventDefs["player_ping"]) => void): void {
         this.On("player_ping", callback);
     }
 
-    static OnPlayerPingStop(callback: (data: { entityid: number }) => void): void {
+    static OnPlayerPingStop(callback: (data: GameEventDefs["player_ping_stop"]) => void): void {
         this.On("player_ping_stop", callback);
     }
 
-    static OnPlayerSound(callback: (data: {
-        userid: number;
-        radius: number;
-        duration: number;
-        step: boolean;
-        userid_pawn: number;
-    }) => void): void {
+    static OnPlayerSound(callback: (data: GameEventDefs["player_sound"]) => void): void {
         this.On("player_sound", callback);
     }
 
-
-    /**
-     * @comment emits a sound to everyone on a team
-     */
-    static OnTeamplayBroadcastAudio(callback: (data: {
-        /** @comment unique team id */
-        team: number;
-        /** @comment name of the sound to emit */
-        sound: string
-    }) => void): void {
+    static OnTeamplayBroadcastAudio(callback: (data: GameEventDefs["teamplay_broadcast_audio"]) => void): void {
         this.On("teamplay_broadcast_audio", callback);
     }
 
-    /**
-     * @comment info about team
-     */
-    static OnTeamInfo(callback: (data: {
-        /** @comment unique team id */
-        teamid: number;
-        /** @comment team name eg "Team Blue" */
-        teamname: string
-    }) => void): void {
+    static OnTeamInfo(callback: (data: GameEventDefs["team_info"]) => void): void {
         this.On("team_info", callback);
     }
 
-    /**
-     * @comment team score changed
-     */
-    static OnTeamScore(callback: (data: {
-        /** @comment team id */
-        teamid: number;
-        /** @comment total team score */
-        score: number
-    }) => void): void {
+    static OnTeamScore(callback: (data: GameEventDefs["team_score"]) => void): void {
         this.On("team_score", callback);
     }
 
-    /**
-     * @comment round restart
-     */
-    static OnTeamplayRoundStart(callback: (data: {
-        /** @comment is this a full reset of the map */
-        full_reset: boolean
-    }) => void): void {
+    static OnTeamplayRoundStart(callback: (data: GameEventDefs["teamplay_round_start"]) => void): void {
         this.On("teamplay_round_start", callback);
     }
 
-    static OnTeamIntroStart(callback: (data: {}) => void): void {
+    static OnTeamIntroStart(callback: (data: GameEventDefs["team_intro_start"]) => void): void {
         this.On("team_intro_start", callback);
     }
 
-    static OnTeamIntroEnd(callback: (data: {}) => void): void {
+    static OnTeamIntroEnd(callback: (data: GameEventDefs["team_intro_end"]) => void): void {
         this.On("team_intro_end", callback);
     }
 
-
-    static OnRoundStart(callback: (data: {
-        /** @comment round time limit in seconds */
-        timelimit: number;
-        /** @comment frag limit in seconds */
-        fraglimit: number;
-        /** @comment round objective */
-        objective: string;
-    }) => void): void {
+    static OnRoundStart(callback: (data: GameEventDefs["round_start"]) => void): void {
         this.On("round_start", callback);
     }
 
-    static OnRoundEnd(callback: (data: {
-        /** @comment winner team/user i */
-        winner: number;
-        /** @comment reson why team won */
-        reason: number;
-        /** @comment end round message */
-        message: string;
-        /** @comment server-generated legacy value */
-        legacy: number;
-        /** @comment total number of players alive at the end of round, used for statistics gathering, computed on the server in the event client is in replay when receiving this message */
-        player_count: number;
-        /** @comment if set, don't play round end music, because action is still on-going */
-        nomusic: number;
-    }) => void): void {
+    static OnRoundEnd(callback: (data: GameEventDefs["round_end"]) => void): void {
         this.On("round_end", callback);
     }
 
-    static OnRoundStartPreEntity(callback: (data: {}) => void): void {
+    static OnRoundStartPreEntity(callback: (data: GameEventDefs["round_start_pre_entity"]) => void): void {
         this.On("round_start_pre_entity", callback);
     }
 
-    static OnRoundStartPostNav(callback: (data: {}) => void): void {
+    static OnRoundStartPostNav(callback: (data: GameEventDefs["round_start_post_nav"]) => void): void {
         this.On("round_start_post_nav", callback);
     }
 
-    static OnRoundFreezeEnd(callback: (data: {}) => void): void {
+    static OnRoundFreezeEnd(callback: (data: GameEventDefs["round_freeze_end"]) => void): void {
         this.On("round_freeze_end", callback);
     }
 
-    /**
-     * @comment sent before all other round restart actions
-     */
-    static OnRoundPrestart(callback: (data: {}) => void): void {
+    static OnRoundPrestart(callback: (data: GameEventDefs["round_prestart"]) => void): void {
         this.On("round_prestart", callback);
     }
 
-    /**
-     * @comment sent after all other round restart actions
-     */
-    static OnRoundPoststart(callback: (data: {}) => void): void {
+    static OnRoundPoststart(callback: (data: GameEventDefs["round_poststart"]) => void): void {
         this.On("round_poststart", callback);
     }
 
-    static OnRoundAnnounceMatchPoint(callback: (data: {}) => void): void {
+    static OnRoundAnnounceMatchPoint(callback: (data: GameEventDefs["round_announce_match_point"]) => void): void {
         this.On("round_announce_match_point", callback);
     }
 
-    static OnRoundAnnounceFinal(callback: (data: {}) => void): void {
+    static OnRoundAnnounceFinal(callback: (data: GameEventDefs["round_announce_final"]) => void): void {
         this.On("round_announce_final", callback);
     }
 
-    static OnRoundAnnounceLastRoundHalf(callback: (data: {}) => void): void {
+    static OnRoundAnnounceLastRoundHalf(callback: (data: GameEventDefs["round_announce_last_round_half"]) => void): void {
         this.On("round_announce_last_round_half", callback);
     }
 
-    static OnRoundAnnounceMatchStart(callback: (data: {}) => void): void {
+    static OnRoundAnnounceMatchStart(callback: (data: GameEventDefs["round_announce_match_start"]) => void): void {
         this.On("round_announce_match_start", callback);
     }
 
-    static OnRoundAnnounceWarmup(callback: (data: {}) => void): void {
+    static OnRoundAnnounceWarmup(callback: (data: GameEventDefs["round_announce_warmup"]) => void): void {
         this.On("round_announce_warmup", callback);
     }
 
-    static OnRoundEndUploadStats(callback: (data: {}) => void): void {
+    static OnRoundEndUploadStats(callback: (data: GameEventDefs["round_end_upload_stats"]) => void): void {
         this.On("round_end_upload_stats", callback);
     }
 
-    static OnRoundOfficiallyEnded(callback: (data: {}) => void): void {
+    static OnRoundOfficiallyEnded(callback: (data: GameEventDefs["round_officially_ended"]) => void): void {
         this.On("round_officially_ended", callback);
     }
 
-    static OnRoundTimeWarning(callback: (data: {}) => void): void {
+    static OnRoundTimeWarning(callback: (data: GameEventDefs["round_time_warning"]) => void): void {
         this.On("round_time_warning", callback);
     }
 
-    static OnRoundMvp(callback: (data: {
-        userid: number;
-        reason: number;
-        value: number;
-        musickitmvps: number;
-        nomusic: number;
-        musickitid: number;
-    }) => void): void {
+    static OnRoundMvp(callback: (data: GameEventDefs["round_mvp"]) => void): void {
         this.On("round_mvp", callback);
     }
 
-
-    /**
-     * @comment sent when a new game is started
-     */
-    static OnGameInit(callback: (data: {}) => void): void {
+    static OnGameInit(callback: (data: GameEventDefs["game_init"]) => void): void {
         this.On("game_init", callback);
     }
 
-    /**
-     * @comment a new game starts
-     */
-    static OnGameStart(callback: (data: {
-        /** @comment max round */
-        roundslimit: number;
-        /** @comment time limit */
-        timelimit: number;
-        /** @comment frag limit */
-        fraglimit: number;
-        /** @comment round objective */
-        objective: string;
-    }) => void): void {
+    static OnGameStart(callback: (data: GameEventDefs["game_start"]) => void): void {
         this.On("game_start", callback);
     }
 
-    /**
-     * @comment a game ended
-     */
-    static OnGameEnd(callback: (data: {
-        /** @comment winner team/user id */
-        winner: number
-    }) => void): void {
+    static OnGameEnd(callback: (data: GameEventDefs["game_end"]) => void): void {
         this.On("game_end", callback);
     }
 
-    /**
-     * @comment a message send by game logic to everyone
-     */
-    static OnGameMessage(callback: (data: {
-        /** @comment 0 = console, 1 = HUD */
-        target: number;
-        /** @comment the message text */
-        text: string
-    }) => void): void {
+    static OnGameMessage(callback: (data: GameEventDefs["game_message"]) => void): void {
         this.On("game_message", callback);
     }
 
-    /**
-     * @comment send when new map is completely loaded
-     */
-    static OnGameNewmap(callback: (data: {
-        /** @comment map name */
-        mapname: string
-    }) => void): void {
+    static OnGameNewmap(callback: (data: GameEventDefs["game_newmap"]) => void): void {
         this.On("game_newmap", callback);
     }
 
-    static OnGamePhaseChanged(callback: (data: { new_phase: number }) => void): void {
+    static OnGamePhaseChanged(callback: (data: GameEventDefs["game_phase_changed"]) => void): void {
         this.On("game_phase_changed", callback);
     }
 
-
-    /**
-     * @comment a spectator/player is a cameraman
-     */
-    static OnHltvCameraman(callback: (data: {
-        /** @comment camera man entity index */
-        userid: number
-    }) => void): void {
+    static OnHltvCameraman(callback: (data: GameEventDefs["hltv_cameraman"]) => void): void {
         this.On("hltv_cameraman", callback);
     }
 
-    /**
-     * @comment shot of a single entity
-     */
-    static OnHltvChase(callback: (data: {
-        /** @comment primary traget index */
-        target1: number;
-        /** @comment secondary traget index or 0 */
-        target2: number;
-        /** @comment camera distance */
-        distance: number;
-        /** @comment view angle horizontal */
-        theta: number;
-        /** @comment view angle vertical */
-        phi: number;
-        /** @comment camera inertia */
-        inertia: number;
-        /** @comment diretcor suggests to show ineye */
-        ineye: number;
-    }) => void): void {
+    static OnHltvChase(callback: (data: GameEventDefs["hltv_chase"]) => void): void {
         this.On("hltv_chase", callback);
     }
 
-    /**
-     * @comment a camera ranking
-     */
-    static OnHltvRankCamera(callback: (data: {
-        /** @comment fixed camera index */
-        index: number;
-        /** @comment ranking, how interesting is this camera view */
-        rank: number;
-        /** @comment best/closest target entity */
-        target: number;
-    }) => void): void {
+    static OnHltvRankCamera(callback: (data: GameEventDefs["hltv_rank_camera"]) => void): void {
         this.On("hltv_rank_camera", callback);
     }
 
-    /**
-     * @comment an entity ranking
-     */
-    static OnHltvRankEntity(callback: (data: {
-        /** @comment player slot */
-        userid: number;
-        /** @comment ranking, how interesting is this entity to view */
-        rank: number;
-        /** @comment best/closest target entity */
-        target: number;
-    }) => void): void {
+    static OnHltvRankEntity(callback: (data: GameEventDefs["hltv_rank_entity"]) => void): void {
         this.On("hltv_rank_entity", callback);
     }
 
-    /**
-     * @comment show from fixed view
-     */
-    static OnHltvFixed(callback: (data: {
-        /** @comment camera position in world */
-        posx: number;
-        posy: number;
-        posz: number;
-        /** @comment camera angles */
-        theta: number;
-        phi: number;
-        offset: number;
-        fov: number;
-        /** @comment follow this player */
-        target: number;
-    }) => void): void {
+    static OnHltvFixed(callback: (data: GameEventDefs["hltv_fixed"]) => void): void {
         this.On("hltv_fixed", callback);
     }
 
-    /**
-     * @comment a HLTV message send by moderators
-     */
-    static OnHltvMessage(callback: (data: { text: string }) => void): void {
+    static OnHltvMessage(callback: (data: GameEventDefs["hltv_message"]) => void): void {
         this.On("hltv_message", callback);
     }
 
-    /**
-     * @comment general HLTV status
-     */
-    static OnHltvStatus(callback: (data: {
-        /** @comment number of HLTV spectators */
-        clients: number;
-        /** @comment number of HLTV slots */
-        slots: number;
-        /** @comment number of HLTV proxies */
-        proxies: number;
-        /** @comment disptach master IP:port */
-        master: string;
-    }) => void): void {
+    static OnHltvStatus(callback: (data: GameEventDefs["hltv_status"]) => void): void {
         this.On("hltv_status", callback);
     }
 
-    static OnHltvTitle(callback: (data: { text: string }) => void): void {
+    static OnHltvTitle(callback: (data: GameEventDefs["hltv_title"]) => void): void {
         this.On("hltv_title", callback);
     }
 
-    /**
-     * @comment a HLTV chat msg sent by spectators
-     */
-    static OnHltvChat(callback: (data: {
-        text: string;
-        /** @comment steam id */
-        steamID: string
-    }) => void): void {
+    static OnHltvChat(callback: (data: GameEventDefs["hltv_chat"]) => void): void {
         this.On("hltv_chat", callback);
     }
 
-    static OnHltvVersioninfo(callback: (data: { version: number }) => void): void {
+    static OnHltvVersioninfo(callback: (data: GameEventDefs["hltv_versioninfo"]) => void): void {
         this.On("hltv_versioninfo", callback);
     }
 
-    static OnHltvReplay(callback: (data: {
-        /** @comment number of seconds in killer replay delay */
-        delay: number;
-        /** @comment reason for replay	(ReplayEventType_t) */
-        reason: number;
-    }) => void): void {
+    static OnHltvReplay(callback: (data: GameEventDefs["hltv_replay"]) => void): void {
         this.On("hltv_replay", callback);
     }
 
-    static OnHltvChangedMode(callback: (data: {
-        oldmode: number;
-        newmode: number;
-        obs_target: number;
-    }) => void): void {
+    static OnHltvChangedMode(callback: (data: GameEventDefs["hltv_changed_mode"]) => void): void {
         this.On("hltv_changed_mode", callback);
     }
 
-    static OnHltvReplayStatus(callback: (data: { reason: number }) => void): void {
+    static OnHltvReplayStatus(callback: (data: GameEventDefs["hltv_replay_status"]) => void): void {
         this.On("hltv_replay_status", callback);
     }
 
-
-    static OnDemoStart(callback: (data: {}) => void): void {
+    static OnDemoStart(callback: (data: GameEventDefs["demo_start"]) => void): void {
         this.On("demo_start", callback);
     }
 
-    static OnDemoStop(callback: (data: {}) => void): void {
+    static OnDemoStop(callback: (data: GameEventDefs["demo_stop"]) => void): void {
         this.On("demo_stop", callback);
     }
 
-    static OnDemoSkip(callback: (data: {
-        /** @comment current playback tick */
-        playback_tick: number;
-        /** @comment tick we're going to */
-        skipto_tick: number;
-    }) => void): void {
+    static OnDemoSkip(callback: (data: GameEventDefs["demo_skip"]) => void): void {
         this.On("demo_skip", callback);
     }
 
-
-    static OnMapShutdown(callback: (data: {}) => void): void {
+    static OnMapShutdown(callback: (data: GameEventDefs["map_shutdown"]) => void): void {
         this.On("map_shutdown", callback);
     }
 
-    static OnMapTransition(callback: (data: {}) => void): void {
+    static OnMapTransition(callback: (data: GameEventDefs["map_transition"]) => void): void {
         this.On("map_transition", callback);
     }
 
-    static OnHostnameChanged(callback: (data: { hostname: string }) => void): void {
+    static OnHostnameChanged(callback: (data: GameEventDefs["hostname_changed"]) => void): void {
         this.On("hostname_changed", callback);
     }
 
-    static OnDifficultyChanged(callback: (data: {
-        newDifficulty: number;
-        oldDifficulty: number;
-        /** @comment new difficulty as string */
-        strDifficulty: string;
-    }) => void): void {
+    static OnDifficultyChanged(callback: (data: GameEventDefs["difficulty_changed"]) => void): void {
         this.On("difficulty_changed", callback);
     }
 
-
-    static OnWeaponFire(callback: (data: {
-        userid: number;
-        /** @comment weapon name used */
-        weapon: string;
-        /** @comment is weapon silenced */
-        silenced: boolean;
-        userid_pawn: number;
-    }) => void): void {
+    static OnWeaponFire(callback: (data: GameEventDefs["weapon_fire"]) => void): void {
         this.On("weapon_fire", callback);
     }
 
-    static OnWeaponFireOnEmpty(callback: (data: {
-        userid: number;
-        /** @comment weapon name used */
-        weapon: string;
-        userid_pawn: number;
-    }) => void): void {
+    static OnWeaponFireOnEmpty(callback: (data: GameEventDefs["weapon_fire_on_empty"]) => void): void {
         this.On("weapon_fire_on_empty", callback);
     }
 
-    static OnWeaponOutofammo(callback: (data: {
-        userid: number;
-        userid_pawn: number;
-    }) => void): void {
+    static OnWeaponOutofammo(callback: (data: GameEventDefs["weapon_outofammo"]) => void): void {
         this.On("weapon_outofammo", callback);
     }
 
-    static OnWeaponReload(callback: (data: {
-        userid: number;
-        userid_pawn: number;
-    }) => void): void {
+    static OnWeaponReload(callback: (data: GameEventDefs["weapon_reload"]) => void): void {
         this.On("weapon_reload", callback);
     }
 
-    static OnWeaponZoom(callback: (data: {
-        userid: number;
-        userid_pawn: number;
-    }) => void): void {
+    static OnWeaponZoom(callback: (data: GameEventDefs["weapon_zoom"]) => void): void {
         this.On("weapon_zoom", callback);
     }
 
-    /**
-     * @comment exists for the game instructor to let it know when the player zoomed in with a regular rifle. Different from the above weapon_zoom because we don't use this event to notify bots
-     */
-    static OnWeaponZoomRifle(callback: (data: {
-        userid: number;
-        userid_pawn: number;
-    }) => void): void {
+    static OnWeaponZoomRifle(callback: (data: GameEventDefs["weapon_zoom_rifle"]) => void): void {
         this.On("weapon_zoom_rifle", callback);
     }
 
-
-    static OnGrenadeThrown(callback: (data: {
-        userid: number;
-        /** @comment weapon name used */
-        weapon: string;
-        userid_pawn: number;
-    }) => void): void {
+    static OnGrenadeThrown(callback: (data: GameEventDefs["grenade_thrown"]) => void): void {
         this.On("grenade_thrown", callback);
     }
 
-    static OnGrenadeBounce(callback: (data: {
-        userid: number;
-        userid_pawn: number;
-    }) => void): void {
+    static OnGrenadeBounce(callback: (data: GameEventDefs["grenade_bounce"]) => void): void {
         this.On("grenade_bounce", callback);
     }
 
-    static OnHegrenadeDetonate(callback: (data: {
-        userid: number;
-        entityid: number;
-        x: number;
-        y: number;
-        z: number;
-        userid_pawn: number;
-    }) => void): void {
+    static OnHegrenadeDetonate(callback: (data: GameEventDefs["hegrenade_detonate"]) => void): void {
         this.On("hegrenade_detonate", callback);
     }
 
-    static OnFlashbangDetonate(callback: (data: {
-        userid: number;
-        entityid: number;
-        x: number;
-        y: number;
-        z: number;
-        userid_pawn: number;
-    }) => void): void {
+    static OnFlashbangDetonate(callback: (data: GameEventDefs["flashbang_detonate"]) => void): void {
         this.On("flashbang_detonate", callback);
     }
 
-    static OnSmokegrenadeDetonate(callback: (data: {
-        userid: number;
-        entityid: number;
-        x: number;
-        y: number;
-        z: number;
-        userid_pawn: number;
-    }) => void): void {
+    static OnSmokegrenadeDetonate(callback: (data: GameEventDefs["smokegrenade_detonate"]) => void): void {
         this.On("smokegrenade_detonate", callback);
     }
 
-    static OnSmokegrenadeExpired(callback: (data: {
-        userid: number;
-        entityid: number;
-        x: number;
-        y: number;
-        z: number;
-        userid_pawn: number;
-    }) => void): void {
+    static OnSmokegrenadeExpired(callback: (data: GameEventDefs["smokegrenade_expired"]) => void): void {
         this.On("smokegrenade_expired", callback);
     }
 
-    static OnMolotovDetonate(callback: (data: {
-        userid: number;
-        x: number;
-        y: number;
-        z: number;
-        userid_pawn: number;
-    }) => void): void {
+    static OnMolotovDetonate(callback: (data: GameEventDefs["molotov_detonate"]) => void): void {
         this.On("molotov_detonate", callback);
     }
 
-    static OnDecoyDetonate(callback: (data: {
-        userid: number;
-        entityid: number;
-        x: number;
-        y: number;
-        z: number;
-        userid_pawn: number;
-    }) => void): void {
+    static OnDecoyDetonate(callback: (data: GameEventDefs["decoy_detonate"]) => void): void {
         this.On("decoy_detonate", callback);
     }
 
-    static OnDecoyStarted(callback: (data: {
-        userid: number;
-        entityid: number;
-        x: number;
-        y: number;
-        z: number;
-        userid_pawn: number;
-    }) => void): void {
+    static OnDecoyStarted(callback: (data: GameEventDefs["decoy_started"]) => void): void {
         this.On("decoy_started", callback);
     }
 
-    static OnDecoyFiring(callback: (data: {
-        userid: number;
-        entityid: number;
-        x: number;
-        y: number;
-        z: number;
-        userid_pawn: number;
-    }) => void): void {
+    static OnDecoyFiring(callback: (data: GameEventDefs["decoy_firing"]) => void): void {
         this.On("decoy_firing", callback);
     }
 
-    static OnTagrenadeDetonate(callback: (data: {
-        userid: number;
-        entityid: number;
-        x: number;
-        y: number;
-        z: number;
-    }) => void): void {
+    static OnTagrenadeDetonate(callback: (data: GameEventDefs["tagrenade_detonate"]) => void): void {
         this.On("tagrenade_detonate", callback);
     }
 
-
-    static OnInfernoStartburn(callback: (data: {
-        entityid: number;
-        x: number;
-        y: number;
-        z: number;
-    }) => void): void {
+    static OnInfernoStartburn(callback: (data: GameEventDefs["inferno_startburn"]) => void): void {
         this.On("inferno_startburn", callback);
     }
 
-    static OnInfernoExpire(callback: (data: {
-        entityid: number;
-        x: number;
-        y: number;
-        z: number;
-    }) => void): void {
+    static OnInfernoExpire(callback: (data: GameEventDefs["inferno_expire"]) => void): void {
         this.On("inferno_expire", callback);
     }
 
-    static OnInfernoExtinguish(callback: (data: {
-        entityid: number;
-        x: number;
-        y: number;
-        z: number;
-    }) => void): void {
+    static OnInfernoExtinguish(callback: (data: GameEventDefs["inferno_extinguish"]) => void): void {
         this.On("inferno_extinguish", callback);
     }
 
-
-    static OnBombBeginplant(callback: (data: {
-        /** @comment player who is planting the bomb */
-        userid: number;
-        /** @comment bombsite index */
-        site: number;
-        userid_pawn: number;
-    }) => void): void {
+    static OnBombBeginplant(callback: (data: GameEventDefs["bomb_beginplant"]) => void): void {
         this.On("bomb_beginplant", callback);
     }
 
-    static OnBombAbortplant(callback: (data: {
-        /** @comment player who is planting the bomb */
-        userid: number;
-        /** @comment bombsite index */
-        site: number;
-        userid_pawn: number;
-    }) => void): void {
+    static OnBombAbortplant(callback: (data: GameEventDefs["bomb_abortplant"]) => void): void {
         this.On("bomb_abortplant", callback);
     }
 
-    static OnBombPlanted(callback: (data: {
-        /** @comment player who planted the bomb */
-        userid: number;
-        /** @comment bombsite index */
-        site: number;
-        userid_pawn: number;
-    }) => void): void {
+    static OnBombPlanted(callback: (data: GameEventDefs["bomb_planted"]) => void): void {
         this.On("bomb_planted", callback);
     }
 
-    static OnBombBegindefuse(callback: (data: {
-        /** @comment player who is defusing */
-        userid: number;
-        haskit: boolean;
-        userid_pawn: number;
-    }) => void): void {
+    static OnBombBegindefuse(callback: (data: GameEventDefs["bomb_begindefuse"]) => void): void {
         this.On("bomb_begindefuse", callback);
     }
 
-    static OnBombAbortdefuse(callback: (data: {
-        /** @comment player who was defusing */
-        userid: number;
-        userid_pawn: number;
-    }) => void): void {
+    static OnBombAbortdefuse(callback: (data: GameEventDefs["bomb_abortdefuse"]) => void): void {
         this.On("bomb_abortdefuse", callback);
     }
 
-    static OnBombDefused(callback: (data: {
-        /** @comment player who defused the bomb */
-        userid: number;
-        /** @comment bombsite index */
-        site: number;
-        userid_pawn: number;
-    }) => void): void {
+    static OnBombDefused(callback: (data: GameEventDefs["bomb_defused"]) => void): void {
         this.On("bomb_defused", callback);
     }
 
-    static OnBombExploded(callback: (data: {
-        /** @comment player who planted the bomb */
-        userid: number;
-        /** @comment bombsite index */
-        site: number;
-        userid_pawn: number;
-    }) => void): void {
+    static OnBombExploded(callback: (data: GameEventDefs["bomb_exploded"]) => void): void {
         this.On("bomb_exploded", callback);
     }
 
-    static OnBombDropped(callback: (data: {
-        /** @comment player who dropped the bomb */
-        userid: number;
-        entindex: number;
-        userid_pawn: number;
-    }) => void): void {
+    static OnBombDropped(callback: (data: GameEventDefs["bomb_dropped"]) => void): void {
         this.On("bomb_dropped", callback);
     }
 
-    static OnBombPickup(callback: (data: {
-        /** @comment player pawn who picked up the bomb */
-        userid: number;
-        userid_pawn: number;
-    }) => void): void {
+    static OnBombPickup(callback: (data: GameEventDefs["bomb_pickup"]) => void): void {
         this.On("bomb_pickup", callback);
     }
 
-    static OnBombBeep(callback: (data: {
-        /** @comment c4 entity */
-        entindex: number
-    }) => void): void {
+    static OnBombBeep(callback: (data: GameEventDefs["bomb_beep"]) => void): void {
         this.On("bomb_beep", callback);
     }
 
-
-    static OnDefuserDropped(callback: (data: {
-        /** @comment defuser's entity ID */
-        entityid: number
-    }) => void): void {
+    static OnDefuserDropped(callback: (data: GameEventDefs["defuser_dropped"]) => void): void {
         this.On("defuser_dropped", callback);
     }
 
-    static OnDefuserPickup(callback: (data: {
-        /** @comment defuser's entity ID */
-        entityid: number;
-        /** @comment player who picked up the defuser */
-        userid: number;
-        userid_pawn: number;
-    }) => void): void {
+    static OnDefuserPickup(callback: (data: GameEventDefs["defuser_pickup"]) => void): void {
         this.On("defuser_pickup", callback);
     }
 
-
-    static OnHostageFollows(callback: (data: {
-        /** @comment player who touched the hostage */
-        userid: number;
-        /** @comment hostage entity index */
-        hostage: number;
-        userid_pawn: number;
-    }) => void): void {
+    static OnHostageFollows(callback: (data: GameEventDefs["hostage_follows"]) => void): void {
         this.On("hostage_follows", callback);
     }
 
-    static OnHostageHurt(callback: (data: {
-        /** @comment player who hurt the hostage */
-        userid: number;
-        /** @comment hostage entity index */
-        hostage: number;
-        userid_pawn: number;
-    }) => void): void {
+    static OnHostageHurt(callback: (data: GameEventDefs["hostage_hurt"]) => void): void {
         this.On("hostage_hurt", callback);
     }
 
-    static OnHostageKilled(callback: (data: {
-        /** @comment player who killed the hostage */
-        userid: number;
-        /** @comment hostage entity index */
-        hostage: number;
-        userid_pawn: number;
-    }) => void): void {
+    static OnHostageKilled(callback: (data: GameEventDefs["hostage_killed"]) => void): void {
         this.On("hostage_killed", callback);
     }
 
-    static OnHostageRescued(callback: (data: {
-        /** @comment player who rescued the hostage */
-        userid: number;
-        /** @comment hostage entity index */
-        hostage: number;
-        /** @comment rescue site index */
-        site: number;
-        userid_pawn: number;
-    }) => void): void {
+    static OnHostageRescued(callback: (data: GameEventDefs["hostage_rescued"]) => void): void {
         this.On("hostage_rescued", callback);
     }
 
-    static OnHostageStopsFollowing(callback: (data: {
-        /** @comment player who rescued the hostage */
-        userid: number;
-        /** @comment hostage entity index */
-        hostage: number;
-        userid_pawn: number;
-    }) => void): void {
+    static OnHostageStopsFollowing(callback: (data: GameEventDefs["hostage_stops_following"]) => void): void {
         this.On("hostage_stops_following", callback);
     }
 
-    static OnHostageRescuedAll(callback: (data: {}) => void): void {
+    static OnHostageRescuedAll(callback: (data: GameEventDefs["hostage_rescued_all"]) => void): void {
         this.On("hostage_rescued_all", callback);
     }
 
-    static OnHostageCallForHelp(callback: (data: {
-        /** @comment hostage entity index */
-        hostage: number
-    }) => void): void {
+    static OnHostageCallForHelp(callback: (data: GameEventDefs["hostage_call_for_help"]) => void): void {
         this.On("hostage_call_for_help", callback);
     }
 
-
-    static OnVipEscaped(callback: (data: {
-        /** @comment player who was the VIP */
-        userid: number
-    }) => void): void {
+    static OnVipEscaped(callback: (data: GameEventDefs["vip_escaped"]) => void): void {
         this.On("vip_escaped", callback);
     }
 
-    static OnVipKilled(callback: (data: {
-        /** @comment player who was the VIP */
-        userid: number;
-        /** @comment user ID who killed the VIP */
-        attacker: number;
-    }) => void): void {
+    static OnVipKilled(callback: (data: GameEventDefs["vip_killed"]) => void): void {
         this.On("vip_killed", callback);
     }
 
-
-    static OnItemPurchase(callback: (data: {
-        userid: number;
-        team: number;
-        loadout: number;
-        weapon: string;
-    }) => void): void {
+    static OnItemPurchase(callback: (data: GameEventDefs["item_purchase"]) => void): void {
         this.On("item_purchase", callback);
     }
 
-    static OnItemPickup(callback: (data: {
-        userid: number;
-        /** @comment either a weapon such as 'tmp' or 'hegrenade', or an item such as 'nvgs' */
-        item: string;
-        silent: boolean;
-        defindex: number;
-    }) => void): void {
+    static OnItemPickup(callback: (data: GameEventDefs["item_pickup"]) => void): void {
         this.On("item_pickup", callback);
     }
 
-    static OnItemPickupSlerp(callback: (data: {
-        userid: number;
-        index: number;
-        behavior: number;
-    }) => void): void {
+    static OnItemPickupSlerp(callback: (data: GameEventDefs["item_pickup_slerp"]) => void): void {
         this.On("item_pickup_slerp", callback);
     }
 
-    static OnItemPickupFailed(callback: (data: {
-        userid: number;
-        item: string;
-        reason: number;
-        limit: number;
-    }) => void): void {
+    static OnItemPickupFailed(callback: (data: GameEventDefs["item_pickup_failed"]) => void): void {
         this.On("item_pickup_failed", callback);
     }
 
-    static OnItemRemove(callback: (data: {
-        userid: number;
-        /** @comment either a weapon such as 'tmp' or 'hegrenade', or an item such as 'nvgs' */
-        item: string;
-        defindex: number;
-    }) => void): void {
+    static OnItemRemove(callback: (data: GameEventDefs["item_remove"]) => void): void {
         this.On("item_remove", callback);
     }
 
-    static OnItemEquip(callback: (data: {
-        userid: number;
-        /** @comment either a weapon such as 'tmp' or 'hegrenade', or an item such as 'nvgs' */
-        item: string;
-        defindex: number;
-        canzoom: boolean;
-        hassilencer: boolean;
-        issilenced: boolean;
-        hastracers: boolean;
-        weptype: number;
-        ispainted: boolean;
-    }) => void): void {
+    static OnItemEquip(callback: (data: GameEventDefs["item_equip"]) => void): void {
         this.On("item_equip", callback);
     }
 
-    static OnItemSchemaInitialized(callback: (data: {}) => void): void {
+    static OnItemSchemaInitialized(callback: (data: GameEventDefs["item_schema_initialized"]) => void): void {
         this.On("item_schema_initialized", callback);
     }
 
-
-    static OnAmmoPickup(callback: (data: {
-        userid: number;
-        /** @comment either a weapon such as 'tmp' or 'hegrenade', or an item such as 'nvgs' */
-        item: string;
-        /** @comment the weapon entindex */
-        index: number;
-    }) => void): void {
+    static OnAmmoPickup(callback: (data: GameEventDefs["ammo_pickup"]) => void): void {
         this.On("ammo_pickup", callback);
     }
 
-    static OnAmmoRefill(callback: (data: {
-        userid: number;
-        success: boolean;
-    }) => void): void {
+    static OnAmmoRefill(callback: (data: GameEventDefs["ammo_refill"]) => void): void {
         this.On("ammo_refill", callback);
     }
 
-
-    static OnEnterBuyzone(callback: (data: {
-        userid: number;
-        canbuy: boolean;
-    }) => void): void {
+    static OnEnterBuyzone(callback: (data: GameEventDefs["enter_buyzone"]) => void): void {
         this.On("enter_buyzone", callback);
     }
 
-    static OnExitBuyzone(callback: (data: {
-        userid: number;
-        canbuy: boolean;
-    }) => void): void {
+    static OnExitBuyzone(callback: (data: GameEventDefs["exit_buyzone"]) => void): void {
         this.On("exit_buyzone", callback);
     }
 
-    static OnEnterBombzone(callback: (data: {
-        userid: number;
-        hasbomb: boolean;
-        isplanted: boolean;
-    }) => void): void {
+    static OnEnterBombzone(callback: (data: GameEventDefs["enter_bombzone"]) => void): void {
         this.On("enter_bombzone", callback);
     }
 
-    static OnExitBombzone(callback: (data: {
-        userid: number;
-        hasbomb: boolean;
-        isplanted: boolean;
-    }) => void): void {
+    static OnExitBombzone(callback: (data: GameEventDefs["exit_bombzone"]) => void): void {
         this.On("exit_bombzone", callback);
     }
 
-    static OnEnterRescueZone(callback: (data: { userid: number }) => void): void {
+    static OnEnterRescueZone(callback: (data: GameEventDefs["enter_rescue_zone"]) => void): void {
         this.On("enter_rescue_zone", callback);
     }
 
-    static OnExitRescueZone(callback: (data: { userid: number }) => void): void {
+    static OnExitRescueZone(callback: (data: GameEventDefs["exit_rescue_zone"]) => void): void {
         this.On("exit_rescue_zone", callback);
     }
 
-    static OnBuytimeEnded(callback: (data: {}) => void): void {
+    static OnBuytimeEnded(callback: (data: GameEventDefs["buytime_ended"]) => void): void {
         this.On("buytime_ended", callback);
     }
 
-
-    static OnSilencerOff(callback: (data: { userid: number }) => void): void {
+    static OnSilencerOff(callback: (data: GameEventDefs["silencer_off"]) => void): void {
         this.On("silencer_off", callback);
     }
 
-    static OnSilencerOn(callback: (data: { userid: number }) => void): void {
+    static OnSilencerOn(callback: (data: GameEventDefs["silencer_on"]) => void): void {
         this.On("silencer_on", callback);
     }
 
-    static OnSilencerDetach(callback: (data: {
-        userid: number;
-        userid_pawn: number;
-    }) => void): void {
+    static OnSilencerDetach(callback: (data: GameEventDefs["silencer_detach"]) => void): void {
         this.On("silencer_detach", callback);
     }
 
-
-    static OnBuymenuOpen(callback: (data: { userid: number }) => void): void {
+    static OnBuymenuOpen(callback: (data: GameEventDefs["buymenu_open"]) => void): void {
         this.On("buymenu_open", callback);
     }
 
-    static OnBuymenuClose(callback: (data: { userid: number }) => void): void {
+    static OnBuymenuClose(callback: (data: GameEventDefs["buymenu_close"]) => void): void {
         this.On("buymenu_close", callback);
     }
 
-
-    static OnInspectWeapon(callback: (data: {
-        userid: number;
-        userid_pawn: number;
-    }) => void): void {
+    static OnInspectWeapon(callback: (data: GameEventDefs["inspect_weapon"]) => void): void {
         this.On("inspect_weapon", callback);
     }
 
-
-    static OnOtherDeath(callback: (data: {
-        /** @comment other entity ID who died */
-        otherid: number;
-        /** @comment other entity type */
-        othertype: string;
-        /** @comment user ID who killed */
-        attacker: number;
-        /** @comment weapon name killer used */
-        weapon: string;
-        /** @comment inventory item id of weapon killer used */
-        weapon_itemid: string;
-        /** @comment faux item id of weapon killer used */
-        weapon_fauxitemid: string;
-        weapon_originalowner_xuid: string;
-        /** @comment singals a headshot */
-        headshot: boolean;
-        /** @comment number of objects shot penetrated before killing target */
-        penetrated: number;
-        /** @comment kill happened without a scope, used for death notice icon */
-        noscope: boolean;
-        /** @comment hitscan weapon went through smoke grenade */
-        thrusmoke: boolean;
-        /** @comment attacker was blind from flashbang */
-        attackerblind: boolean;
-    }) => void): void {
+    static OnOtherDeath(callback: (data: GameEventDefs["other_death"]) => void): void {
         this.On("other_death", callback);
     }
 
-    static OnBulletImpact(callback: (data: {
-        userid: number;
-        x: number;
-        y: number;
-        z: number;
-        userid_pawn: number;
-    }) => void): void {
+    static OnBulletImpact(callback: (data: GameEventDefs["bullet_impact"]) => void): void {
         this.On("bullet_impact", callback);
     }
 
-    static OnBulletFlightResolution(callback: (data: {
-        userid: number;
-        userid_pawn: number;
-        pos_x: number;
-        pos_y: number;
-        pos_z: number;
-        ang_x: number;
-        ang_y: number;
-        ang_z: number;
-        start_x: number;
-        start_y: number;
-        start_z: number;
-    }) => void): void {
+    static OnBulletFlightResolution(callback: (data: GameEventDefs["bullet_flight_resolution"]) => void): void {
         this.On("bullet_flight_resolution", callback);
     }
 
-
-    static OnDoorClose(callback: (data: {
-        /** @comment Who closed the door */
-        userid: number;
-        /** @comment Is the door a checkpoint door */
-        checkpoint: boolean;
-        userid_pawn: number;
-    }) => void): void {
+    static OnDoorClose(callback: (data: GameEventDefs["door_close"]) => void): void {
         this.On("door_close", callback);
     }
 
-    static OnDoorMoving(callback: (data: {
-        userid: number;
-        entindex: number;
-        userid_pawn: number;
-    }) => void): void {
+    static OnDoorMoving(callback: (data: GameEventDefs["door_moving"]) => void): void {
         this.On("door_moving", callback);
     }
 
-    static OnDoorBreak(callback: (data: {
-        entindex: number;
-        dmgstate: number;
-    }) => void): void {
+    static OnDoorBreak(callback: (data: GameEventDefs["door_break"]) => void): void {
         this.On("door_break", callback);
     }
 
-    static OnDoorClosed(callback: (data: {
-        userid_pawn: number;
-        entindex: number;
-    }) => void): void {
+    static OnDoorClosed(callback: (data: GameEventDefs["door_closed"]) => void): void {
         this.On("door_closed", callback);
     }
 
-    static OnDoorOpen(callback: (data: {
-        userid_pawn: number;
-        entindex: number;
-    }) => void): void {
+    static OnDoorOpen(callback: (data: GameEventDefs["door_open"]) => void): void {
         this.On("door_open", callback);
     }
 
-
-    static OnBreakBreakable(callback: (data: {
-        entindex: number;
-        userid: number;
-        /** @comment BREAK_GLASS, BREAK_WOOD, etc */
-        material: number;
-        userid_pawn: number;
-    }) => void): void {
+    static OnBreakBreakable(callback: (data: GameEventDefs["break_breakable"]) => void): void {
         this.On("break_breakable", callback);
     }
 
-    static OnBreakProp(callback: (data: {
-        entindex: number;
-        userid: number;
-        userid_pawn: number;
-    }) => void): void {
+    static OnBreakProp(callback: (data: GameEventDefs["break_prop"]) => void): void {
         this.On("break_prop", callback);
     }
 
-    static OnBrokenBreakable(callback: (data: {
-        entindex: number;
-        userid: number;
-        /** @comment BREAK_GLASS, BREAK_WOOD, etc */
-        material: number;
-        userid_pawn: number;
-    }) => void): void {
+    static OnBrokenBreakable(callback: (data: GameEventDefs["broken_breakable"]) => void): void {
         this.On("broken_breakable", callback);
     }
 
-
-    static OnEntityKilled(callback: (data: {
-        entindex_killed: number;
-        entindex_attacker: number;
-        entindex_inflictor: number;
-        damagebits: number;
-    }) => void): void {
+    static OnEntityKilled(callback: (data: GameEventDefs["entity_killed"]) => void): void {
         this.On("entity_killed", callback);
     }
 
-    static OnEntityVisible(callback: (data: {
-        /** @comment The player who sees the entity */
-        userid: number;
-        /** @comment Entindex of the entity they see */
-        subject: number;
-        /** @comment Classname of the entity they see */
-        classname: string;
-        /** @comment name of the entity they see */
-        entityname: string;
-    }) => void): void {
+    static OnEntityVisible(callback: (data: GameEventDefs["entity_visible"]) => void): void {
         this.On("entity_visible", callback);
     }
 
-
-    static OnVoteStarted(callback: (data: {
-        issue: string;
-        param1: string;
-        team: number;
-        /** @comment entity id of the player who initiated the vote */
-        initiator: number;
-    }) => void): void {
+    static OnVoteStarted(callback: (data: GameEventDefs["vote_started"]) => void): void {
         this.On("vote_started", callback);
     }
 
-    static OnVoteFailed(callback: (data: { team: number }) => void): void {
+    static OnVoteFailed(callback: (data: GameEventDefs["vote_failed"]) => void): void {
         this.On("vote_failed", callback);
     }
 
-    static OnVotePassed(callback: (data: {
-        details: string;
-        param1: string;
-        team: number;
-    }) => void): void {
+    static OnVotePassed(callback: (data: GameEventDefs["vote_passed"]) => void): void {
         this.On("vote_passed", callback);
     }
 
-    static OnVoteChanged(callback: (data: {
-        vote_option1: number;
-        vote_option2: number;
-        vote_option3: number;
-        vote_option4: number;
-        vote_option5: number;
-        potentialVotes: number;
-    }) => void): void {
+    static OnVoteChanged(callback: (data: GameEventDefs["vote_changed"]) => void): void {
         this.On("vote_changed", callback);
     }
 
-    static OnVoteCastYes(callback: (data: {
-        team: number;
-        /** @comment entity id of the voter */
-        entityid: number;
-    }) => void): void {
+    static OnVoteCastYes(callback: (data: GameEventDefs["vote_cast_yes"]) => void): void {
         this.On("vote_cast_yes", callback);
     }
 
-    static OnVoteCastNo(callback: (data: {
-        team: number;
-        /** @comment entity id of the voter */
-        entityid: number;
-    }) => void): void {
+    static OnVoteCastNo(callback: (data: GameEventDefs["vote_cast_no"]) => void): void {
         this.On("vote_cast_no", callback);
     }
 
-    static OnVoteCast(callback: (data: {
-        /** @comment which option the player voted on */
-        vote_option: number;
-        team: number;
-        /** @comment player who voted */
-        userid: number;
-    }) => void): void {
+    static OnVoteCast(callback: (data: GameEventDefs["vote_cast"]) => void): void {
         this.On("vote_cast", callback);
     }
 
-    static OnVoteEnded(callback: (data: {}) => void): void {
+    static OnVoteEnded(callback: (data: GameEventDefs["vote_ended"]) => void): void {
         this.On("vote_ended", callback);
     }
 
-    static OnVoteOptions(callback: (data: {
-        /** @comment Number of options - up to MAX_VOTE_OPTIONS */
-        count: number;
-        option1: string;
-        option2: string;
-        option3: string;
-        option4: string;
-        option5: string;
-    }) => void): void {
+    static OnVoteOptions(callback: (data: GameEventDefs["vote_options"]) => void): void {
         this.On("vote_options", callback);
     }
 
-    static OnStartVote(callback: (data: {
-        userid: number;
-        type: number;
-        vote_parameter: number;
-    }) => void): void {
+    static OnStartVote(callback: (data: GameEventDefs["start_vote"]) => void): void {
         this.On("start_vote", callback);
     }
 
-    static OnEnableRestartVoting(callback: (data: { enable: boolean }) => void): void {
+    static OnEnableRestartVoting(callback: (data: GameEventDefs["enable_restart_voting"]) => void): void {
         this.On("enable_restart_voting", callback);
     }
 
-
-    static OnAchievementEvent(callback: (data: {
-        /** @comment non-localized name of achievement */
-        achievement_name: string;
-        /** @comment # of steps toward achievement */
-        cur_val: number;
-        /** @comment total # of steps in achievement */
-        max_val: number;
-    }) => void): void {
+    static OnAchievementEvent(callback: (data: GameEventDefs["achievement_event"]) => void): void {
         this.On("achievement_event", callback);
     }
 
-    static OnAchievementEarned(callback: (data: {
-        /** @comment entindex of the player */
-        player: number;
-        /** @comment achievement ID */
-        achievement: number;
-    }) => void): void {
+    static OnAchievementEarned(callback: (data: GameEventDefs["achievement_earned"]) => void): void {
         this.On("achievement_earned", callback);
     }
 
-    static OnAchievementEarnedLocal(callback: (data: {
-        /** @comment achievement ID */
-        achievement: number;
-        /** @comment splitscreen ID */
-        splitscreenplayer: number;
-    }) => void): void {
+    static OnAchievementEarnedLocal(callback: (data: GameEventDefs["achievement_earned_local"]) => void): void {
         this.On("achievement_earned_local", callback);
     }
 
-    /**
-     * @comment Used for a notification message when an achievement fails to write
-     */
-    static OnAchievementWriteFailed(callback: (data: {}) => void): void {
+    static OnAchievementWriteFailed(callback: (data: GameEventDefs["achievement_write_failed"]) => void): void {
         this.On("achievement_write_failed", callback);
     }
 
-    static OnAchievementInfoLoaded(callback: (data: {}) => void): void {
+    static OnAchievementInfoLoaded(callback: (data: GameEventDefs["achievement_info_loaded"]) => void): void {
         this.On("achievement_info_loaded", callback);
     }
 
-
-    static OnBonusUpdated(callback: (data: {
-        numadvanced: number;
-        numbronze: number;
-        numsilver: number;
-        numgold: number;
-    }) => void): void {
+    static OnBonusUpdated(callback: (data: GameEventDefs["bonus_updated"]) => void): void {
         this.On("bonus_updated", callback);
     }
 
-
-    static OnSpecTargetUpdated(callback: (data: {
-        /** @comment spectating player */
-        userid: number;
-        /** @comment ehandle of the target */
-        target: number;
-        userid_pawn: number;
-    }) => void): void {
+    static OnSpecTargetUpdated(callback: (data: GameEventDefs["spec_target_updated"]) => void): void {
         this.On("spec_target_updated", callback);
     }
 
-    static OnSpecModeUpdated(callback: (data: {
-        /** @comment entindex of the player */
-        userid: number
-    }) => void): void {
+    static OnSpecModeUpdated(callback: (data: GameEventDefs["spec_mode_updated"]) => void): void {
         this.On("spec_mode_updated", callback);
     }
 
-
-    static OnGameinstructorDraw(callback: (data: {}) => void): void {
+    static OnGameinstructorDraw(callback: (data: GameEventDefs["gameinstructor_draw"]) => void): void {
         this.On("gameinstructor_draw", callback);
     }
 
-    static OnGameinstructorNodraw(callback: (data: {}) => void): void {
+    static OnGameinstructorNodraw(callback: (data: GameEventDefs["gameinstructor_nodraw"]) => void): void {
         this.On("gameinstructor_nodraw", callback);
     }
 
-    static OnInstructorStartLesson(callback: (data: {
-        /** @comment The player who this lesson is intended for */
-        userid: number;
-        /** @comment Name of the lesson to start. Must match instructor_lesson.txt */
-        hint_name: string;
-        /** @comment entity id that the hint should display at. Leave empty if controller target */
-        hint_target: number;
-        vr_movement_type: number;
-        vr_single_controller: boolean;
-        vr_controller_type: number;
-    }) => void): void {
+    static OnInstructorStartLesson(callback: (data: GameEventDefs["instructor_start_lesson"]) => void): void {
         this.On("instructor_start_lesson", callback);
     }
 
-    static OnInstructorCloseLesson(callback: (data: {
-        /** @comment The player who this lesson is intended for */
-        userid: number;
-        /** @comment Name of the lesson to start. Must match instructor_lesson.txt */
-        hint_name: string;
-    }) => void): void {
+    static OnInstructorCloseLesson(callback: (data: GameEventDefs["instructor_close_lesson"]) => void): void {
         this.On("instructor_close_lesson", callback);
     }
 
-    /**
-     * @comment create a hint using data supplied entirely by the server/map. Intended for hints to smooth playtests before content is ready to make the hint unneccessary. NOT INTENDED AS A SHIPPABLE CRUTCH
-     */
-    static OnInstructorServerHintCreate(callback: (data: {
-        /** @comment user ID of the player that triggered the hint */
-        userid: number;
-        /** @comment what to name the hint. For referencing it again later (e.g. a kill command for the hint instead of a timeout) */
-        hint_name: string;
-        /** @comment type name so that messages of the same type will replace each other */
-        hint_replace_key: string;
-        /** @comment entity id that the hint should display at */
-        hint_target: number;
-        /** @comment userid id of the activator */
-        hint_activator_userid: number;
-        /** @comment how long in seconds until the hint automatically times out, 0 = never */
-        hint_timeout: number;
-        /** @comment the hint icon to use when the hint is onscreen. e.g. "icon_alert_red" */
-        hint_icon_onscreen: string;
-        /** @comment the hint icon to use when the hint is offscreen. e.g. "icon_alert" */
-        hint_icon_offscreen: string;
-        /** @comment the hint caption. e.g. "#ThisIsDangerous" */
-        hint_caption: string;
-        /** @comment the hint caption that only the activator sees e.g. "#YouPushedItGood" */
-        hint_activator_caption: string;
-        /** @comment the hint color in "r,g,b" format where each component is 0-255 */
-        hint_color: string;
-        /** @comment how far on the z axis to offset the hint from entity origin */
-        hint_icon_offset: number;
-        /** @comment range before the hint is culled */
-        hint_range: number;
-        /** @comment hint flags */
-        hint_flags: number;
-        /** @comment bindings to use when use_binding is the onscreen icon */
-        hint_binding: string;
-        /** @comment gamepad bindings to use when use_binding is the onscreen icon */
-        hint_gamepad_binding: string;
-        /** @comment if false, the hint will dissappear if the target entity is invisible */
-        hint_allow_nodraw_target: boolean;
-        /** @comment if true, the hint will not show when outside the player view */
-        hint_nooffscreen: boolean;
-        /** @comment if true, the hint caption will show even if the hint is occluded */
-        hint_forcecaption: boolean;
-        /** @comment if true, only the local player will see the hint */
-        hint_local_player_only: boolean;
-    }) => void): void {
+    static OnInstructorServerHintCreate(callback: (data: GameEventDefs["instructor_server_hint_create"]) => void): void {
         this.On("instructor_server_hint_create", callback);
     }
 
-    /**
-     * @comment destroys a server/map created hint
-     */
-    static OnInstructorServerHintStop(callback: (data: {
-        /** @comment The hint to stop. Will stop ALL hints with this name */
-        hint_name: string
-    }) => void): void {
+    static OnInstructorServerHintStop(callback: (data: GameEventDefs["instructor_server_hint_stop"]) => void): void {
         this.On("instructor_server_hint_stop", callback);
     }
 
-    static OnClientsideLessonClosed(callback: (data: { lesson_name: string }) => void): void {
+    static OnClientsideLessonClosed(callback: (data: GameEventDefs["clientside_lesson_closed"]) => void): void {
         this.On("clientside_lesson_closed", callback);
     }
 
-    static OnSetInstructorGroupEnabled(callback: (data: {
-        group: string;
-        enabled: number;
-    }) => void): void {
+    static OnSetInstructorGroupEnabled(callback: (data: GameEventDefs["set_instructor_group_enabled"]) => void): void {
         this.On("set_instructor_group_enabled", callback);
     }
 
-
-    static OnPhysgunPickup(callback: (data: {
-        /** @comment entity picked up */
-        target: number
-    }) => void): void {
+    static OnPhysgunPickup(callback: (data: GameEventDefs["physgun_pickup"]) => void): void {
         this.On("physgun_pickup", callback);
     }
 
-    static OnFlareIgniteNpc(callback: (data: {
-        /** @comment entity ignited */
-        entindex: number
-    }) => void): void {
+    static OnFlareIgniteNpc(callback: (data: GameEventDefs["flare_ignite_npc"]) => void): void {
         this.On("flare_ignite_npc", callback);
     }
 
-    static OnHelicopterGrenadePuntMiss(callback: (data: {}) => void): void {
+    static OnHelicopterGrenadePuntMiss(callback: (data: GameEventDefs["helicopter_grenade_punt_miss"]) => void): void {
         this.On("helicopter_grenade_punt_miss", callback);
     }
 
-
-    static OnFinaleStart(callback: (data: { rushes: number }) => void): void {
+    static OnFinaleStart(callback: (data: GameEventDefs["finale_start"]) => void): void {
         this.On("finale_start", callback);
     }
 
-
-    /**
-     * @comment fired when achievements/stats are downloaded from Steam or XBox Live
-     */
-    static OnUserDataDownloaded(callback: (data: {}) => void): void {
+    static OnUserDataDownloaded(callback: (data: GameEventDefs["user_data_downloaded"]) => void): void {
         this.On("user_data_downloaded", callback);
     }
 
-    /**
-     * @comment read user titledata from profile
-     */
-    static OnReadGameTitledata(callback: (data: {
-        /** @comment Controller id of user */
-        controllerId: number
-    }) => void): void {
+    static OnReadGameTitledata(callback: (data: GameEventDefs["read_game_titledata"]) => void): void {
         this.On("read_game_titledata", callback);
     }
 
-    /**
-     * @comment write user titledata in profile
-     */
-    static OnWriteGameTitledata(callback: (data: {
-        /** @comment Controller id of user */
-        controllerId: number
-    }) => void): void {
+    static OnWriteGameTitledata(callback: (data: GameEventDefs["write_game_titledata"]) => void): void {
         this.On("write_game_titledata", callback);
     }
 
-    /**
-     * @comment reset user titledata; do not automatically write profile
-     */
-    static OnResetGameTitledata(callback: (data: {
-        /** @comment Controller id of user */
-        controllerId: number
-    }) => void): void {
+    static OnResetGameTitledata(callback: (data: GameEventDefs["reset_game_titledata"]) => void): void {
         this.On("reset_game_titledata", callback);
     }
 
-    static OnWriteProfileData(callback: (data: {}) => void): void {
+    static OnWriteProfileData(callback: (data: GameEventDefs["write_profile_data"]) => void): void {
         this.On("write_profile_data", callback);
     }
 
-
-    static OnRagdollDissolved(callback: (data: { entindex: number }) => void): void {
+    static OnRagdollDissolved(callback: (data: GameEventDefs["ragdoll_dissolved"]) => void): void {
         this.On("ragdoll_dissolved", callback);
     }
 
-
-    static OnInventoryUpdated(callback: (data: {}) => void): void {
+    static OnInventoryUpdated(callback: (data: GameEventDefs["inventory_updated"]) => void): void {
         this.On("inventory_updated", callback);
     }
 
-    static OnCartUpdated(callback: (data: {}) => void): void {
+    static OnCartUpdated(callback: (data: GameEventDefs["cart_updated"]) => void): void {
         this.On("cart_updated", callback);
     }
 
-    static OnStorePricesheetUpdated(callback: (data: {}) => void): void {
+    static OnStorePricesheetUpdated(callback: (data: GameEventDefs["store_pricesheet_updated"]) => void): void {
         this.On("store_pricesheet_updated", callback);
     }
 
-    static OnDropRateModified(callback: (data: {}) => void): void {
+    static OnDropRateModified(callback: (data: GameEventDefs["drop_rate_modified"]) => void): void {
         this.On("drop_rate_modified", callback);
     }
 
-    static OnEventTicketModified(callback: (data: {}) => void): void {
+    static OnEventTicketModified(callback: (data: GameEventDefs["event_ticket_modified"]) => void): void {
         this.On("event_ticket_modified", callback);
     }
 
-
-    static OnGcConnected(callback: (data: {}) => void): void {
+    static OnGcConnected(callback: (data: GameEventDefs["gc_connected"]) => void): void {
         this.On("gc_connected", callback);
     }
 
-
-    static OnDynamicShadowLightChanged(callback: (data: {}) => void): void {
+    static OnDynamicShadowLightChanged(callback: (data: GameEventDefs["dynamic_shadow_light_changed"]) => void): void {
         this.On("dynamic_shadow_light_changed", callback);
     }
 
-
-    static OnGameuiHidden(callback: (data: {}) => void): void {
+    static OnGameuiHidden(callback: (data: GameEventDefs["gameui_hidden"]) => void): void {
         this.On("gameui_hidden", callback);
     }
 
-
-    static OnItemsGifted(callback: (data: {
-        /** @comment entity used by player */
-        player: number;
-        itemdef: number;
-        numgifts: number;
-        giftidx: number;
-        accountid: number;
-    }) => void): void {
+    static OnItemsGifted(callback: (data: GameEventDefs["items_gifted"]) => void): void {
         this.On("items_gifted", callback);
     }
 
-
-    static OnWarmupEnd(callback: (data: {}) => void): void {
+    static OnWarmupEnd(callback: (data: GameEventDefs["warmup_end"]) => void): void {
         this.On("warmup_end", callback);
     }
 
-
-    static OnAnnouncePhaseEnd(callback: (data: {}) => void): void {
+    static OnAnnouncePhaseEnd(callback: (data: GameEventDefs["announce_phase_end"]) => void): void {
         this.On("announce_phase_end", callback);
     }
 
-    static OnCsIntermission(callback: (data: {}) => void): void {
+    static OnCsIntermission(callback: (data: GameEventDefs["cs_intermission"]) => void): void {
         this.On("cs_intermission", callback);
     }
 
-    static OnCsGameDisconnected(callback: (data: {}) => void): void {
+    static OnCsGameDisconnected(callback: (data: GameEventDefs["cs_game_disconnected"]) => void): void {
         this.On("cs_game_disconnected", callback);
     }
 
-    static OnCsRoundFinalBeep(callback: (data: {}) => void): void {
+    static OnCsRoundFinalBeep(callback: (data: GameEventDefs["cs_round_final_beep"]) => void): void {
         this.On("cs_round_final_beep", callback);
     }
 
-    static OnCsRoundStartBeep(callback: (data: {}) => void): void {
+    static OnCsRoundStartBeep(callback: (data: GameEventDefs["cs_round_start_beep"]) => void): void {
         this.On("cs_round_start_beep", callback);
     }
 
-    static OnCsWinPanelRound(callback: (data: {
-        show_timer_defend: boolean;
-        show_timer_attack: boolean;
-        timer_time: number;
-        /** @comment define in cs_gamerules.h */
-        final_event: number;
-        funfact_token: string;
-        funfact_player: number;
-        funfact_data1: number;
-        funfact_data2: number;
-        funfact_data3: number;
-    }) => void): void {
+    static OnCsWinPanelRound(callback: (data: GameEventDefs["cs_win_panel_round"]) => void): void {
         this.On("cs_win_panel_round", callback);
     }
 
-    static OnCsWinPanelMatch(callback: (data: {}) => void): void {
+    static OnCsWinPanelMatch(callback: (data: GameEventDefs["cs_win_panel_match"]) => void): void {
         this.On("cs_win_panel_match", callback);
     }
 
-    static OnCsMatchEndRestart(callback: (data: {}) => void): void {
+    static OnCsMatchEndRestart(callback: (data: GameEventDefs["cs_match_end_restart"]) => void): void {
         this.On("cs_match_end_restart", callback);
     }
 
-    static OnCsPreRestart(callback: (data: {}) => void): void {
+    static OnCsPreRestart(callback: (data: GameEventDefs["cs_pre_restart"]) => void): void {
         this.On("cs_pre_restart", callback);
     }
 
-    static OnCsPrevNextSpectator(callback: (data: { next: boolean }) => void): void {
+    static OnCsPrevNextSpectator(callback: (data: GameEventDefs["cs_prev_next_spectator"]) => void): void {
         this.On("cs_prev_next_spectator", callback);
     }
 
-
-    static OnShowDeathpanel(callback: (data: {
-        /** @comment endindex of the one who was killed */
-        victim: number;
-        /** @comment entindex of the killer entity */
-        killer: number;
-        killer_controller: number;
-        hits_taken: number;
-        damage_taken: number;
-        hits_given: number;
-        damage_given: number;
-        victim_pawn: number;
-    }) => void): void {
+    static OnShowDeathpanel(callback: (data: GameEventDefs["show_deathpanel"]) => void): void {
         this.On("show_deathpanel", callback);
     }
 
-    static OnHideDeathpanel(callback: (data: {}) => void): void {
+    static OnHideDeathpanel(callback: (data: GameEventDefs["hide_deathpanel"]) => void): void {
         this.On("hide_deathpanel", callback);
     }
 
-
-    static OnUgcMapInfoReceived(callback: (data: { published_file_id: string }) => void): void {
+    static OnUgcMapInfoReceived(callback: (data: GameEventDefs["ugc_map_info_received"]) => void): void {
         this.On("ugc_map_info_received", callback);
     }
 
-    static OnUgcMapUnsubscribed(callback: (data: { published_file_id: string }) => void): void {
+    static OnUgcMapUnsubscribed(callback: (data: GameEventDefs["ugc_map_unsubscribed"]) => void): void {
         this.On("ugc_map_unsubscribed", callback);
     }
 
-    static OnUgcMapDownloadError(callback: (data: {
-        published_file_id: string;
-        error_code: number;
-    }) => void): void {
+    static OnUgcMapDownloadError(callback: (data: GameEventDefs["ugc_map_download_error"]) => void): void {
         this.On("ugc_map_download_error", callback);
     }
 
-    static OnUgcFileDownloadFinished(callback: (data: {
-        /** @comment id of this specific content (may be image or map) */
-        hcontent: string
-    }) => void): void {
+    static OnUgcFileDownloadFinished(callback: (data: GameEventDefs["ugc_file_download_finished"]) => void): void {
         this.On("ugc_file_download_finished", callback);
     }
 
-    static OnUgcFileDownloadStart(callback: (data: {
-        /** @comment id of this specific content (may be image or map) */
-        hcontent: string;
-        /** @comment id of the associated content package */
-        published_file_id: string;
-    }) => void): void {
+    static OnUgcFileDownloadStart(callback: (data: GameEventDefs["ugc_file_download_start"]) => void): void {
         this.On("ugc_file_download_start", callback);
     }
 
-
-    /**
-     * @comment Fired when a match ends or is restarted
-     */
-    static OnBeginNewMatch(callback: (data: {}) => void): void {
+    static OnBeginNewMatch(callback: (data: GameEventDefs["begin_new_match"]) => void): void {
         this.On("begin_new_match", callback);
     }
 
-    static OnMatchEndConditions(callback: (data: {
-        frags: number;
-        max_rounds: number;
-        win_rounds: number;
-        time: number;
-    }) => void): void {
+    static OnMatchEndConditions(callback: (data: GameEventDefs["match_end_conditions"]) => void): void {
         this.On("match_end_conditions", callback);
     }
 
-    static OnEndmatchMapvoteSelectingMap(callback: (data: {
-        /** @comment Number of "ties" */
-        count: number;
-        slot1: number;
-        slot2: number;
-        slot3: number;
-        slot4: number;
-        slot5: number;
-        slot6: number;
-        slot7: number;
-        slot8: number;
-        slot9: number;
-        slot10: number;
-    }) => void): void {
+    static OnEndmatchMapvoteSelectingMap(callback: (data: GameEventDefs["endmatch_mapvote_selecting_map"]) => void): void {
         this.On("endmatch_mapvote_selecting_map", callback);
     }
 
-    static OnEndmatchCmmStartRevealItems(callback: (data: {}) => void): void {
+    static OnEndmatchCmmStartRevealItems(callback: (data: GameEventDefs["endmatch_cmm_start_reveal_items"]) => void): void {
         this.On("endmatch_cmm_start_reveal_items", callback);
     }
 
-    /**
-     * @comment a game event, name may be 32 characters long
-     */
-    static OnNextlevelChanged(callback: (data: {
-        nextlevel: string;
-        mapgroup: string;
-        skirmishmode: string;
-    }) => void): void {
+    static OnNextlevelChanged(callback: (data: GameEventDefs["nextlevel_changed"]) => void): void {
         this.On("nextlevel_changed", callback);
     }
 
-
-    static OnDmBonusWeaponStart(callback: (data: {
-        /** @comment The length of time that this bonus lasts */
-        time: number;
-        /** @comment Loadout position of the bonus weapon */
-        Pos: number;
-    }) => void): void {
+    static OnDmBonusWeaponStart(callback: (data: GameEventDefs["dm_bonus_weapon_start"]) => void): void {
         this.On("dm_bonus_weapon_start", callback);
     }
 
-
-    static OnGgKilledEnemy(callback: (data: {
-        /** @comment user ID who died */
-        victimid: number;
-        /** @comment user ID who killed */
-        attackerid: number;
-        /** @comment did killer dominate victim with this kill */
-        dominated: number;
-        /** @comment did killer get revenge on victim with this kill */
-        revenge: number;
-        /** @comment did killer kill with a bonus weapon? */
-        bonus: boolean;
-    }) => void): void {
+    static OnGgKilledEnemy(callback: (data: GameEventDefs["gg_killed_enemy"]) => void): void {
         this.On("gg_killed_enemy", callback);
     }
 
-
-    static OnSwitchTeam(callback: (data: {
-        /** @comment number of active players on both T and CT */
-        numPlayers: number;
-        /** @comment number of spectators */
-        numSpectators: number;
-        /** @comment average rank of human players */
-        avg_rank: number;
-        numTSlotsFree: number;
-        numCTSlotsFree: number;
-    }) => void): void {
+    static OnSwitchTeam(callback: (data: GameEventDefs["switch_team"]) => void): void {
         this.On("switch_team", callback);
     }
 
-
-    /**
-     * @comment fired when a player runs out of time in trial mode
-     */
-    static OnTrialTimeExpired(callback: (data: {
-        /** @comment player whose time has expired */
-        userid: number
-    }) => void): void {
+    static OnTrialTimeExpired(callback: (data: GameEventDefs["trial_time_expired"]) => void): void {
         this.On("trial_time_expired", callback);
     }
 
-
-    /**
-     * @comment Fired when it's time to update matchmaking data at the end of a round.
-     */
-    static OnUpdateMatchmakingStats(callback: (data: {}) => void): void {
+    static OnUpdateMatchmakingStats(callback: (data: GameEventDefs["update_matchmaking_stats"]) => void): void {
         this.On("update_matchmaking_stats", callback);
     }
 
-
-    static OnClientDisconnect(callback: (data: {}) => void): void {
+    static OnClientDisconnect(callback: (data: GameEventDefs["client_disconnect"]) => void): void {
         this.On("client_disconnect", callback);
     }
 
-    static OnClientLoadoutChanged(callback: (data: {}) => void): void {
+    static OnClientLoadoutChanged(callback: (data: GameEventDefs["client_loadout_changed"]) => void): void {
         this.On("client_loadout_changed", callback);
     }
 
-
-    static OnAddPlayerSonarIcon(callback: (data: {
-        userid: number;
-        pos_x: number;
-        pos_y: number;
-        pos_z: number;
-    }) => void): void {
+    static OnAddPlayerSonarIcon(callback: (data: GameEventDefs["add_player_sonar_icon"]) => void): void {
         this.On("add_player_sonar_icon", callback);
     }
 
-    static OnAddBulletHitMarker(callback: (data: {
-        userid: number;
-        bone: number;
-        pos_x: number;
-        pos_y: number;
-        pos_z: number;
-        ang_x: number;
-        ang_y: number;
-        ang_z: number;
-        start_x: number;
-        start_y: number;
-        start_z: number;
-        hit: boolean;
-    }) => void): void {
+    static OnAddBulletHitMarker(callback: (data: GameEventDefs["add_bullet_hit_marker"]) => void): void {
         this.On("add_bullet_hit_marker", callback);
     }
 
-
-    static OnSfuievent(callback: (data: {
-        action: string;
-        data: string;
-        slot: number;
-    }) => void): void {
+    static OnSfuievent(callback: (data: GameEventDefs["sfuievent"]) => void): void {
         this.On("sfuievent", callback);
     }
 
-
-    static OnWeaponhudSelection(callback: (data: {
-        /** @comment Player who this event applies to */
-        userid: number;
-        /** @comment EWeaponHudSelectionMode (switch / pickup / drop) */
-        mode: number;
-        /** @comment Weapon entity index */
-        entindex: number;
-        userid_pawn: number;
-    }) => void): void {
+    static OnWeaponhudSelection(callback: (data: GameEventDefs["weaponhud_selection"]) => void): void {
         this.On("weaponhud_selection", callback);
     }
 
-
-    static OnTrPlayerFlashbanged(callback: (data: {
-        /** @comment user ID of the player banged */
-        userid: number
-    }) => void): void {
+    static OnTrPlayerFlashbanged(callback: (data: GameEventDefs["tr_player_flashbanged"]) => void): void {
         this.On("tr_player_flashbanged", callback);
     }
 
-    static OnTrMarkComplete(callback: (data: { complete: number }) => void): void {
+    static OnTrMarkComplete(callback: (data: GameEventDefs["tr_mark_complete"]) => void): void {
         this.On("tr_mark_complete", callback);
     }
 
-    static OnTrMarkBestTime(callback: (data: { time: number }) => void): void {
+    static OnTrMarkBestTime(callback: (data: GameEventDefs["tr_mark_best_time"]) => void): void {
         this.On("tr_mark_best_time", callback);
     }
 
-    static OnTrExitHintTrigger(callback: (data: {}) => void): void {
+    static OnTrExitHintTrigger(callback: (data: GameEventDefs["tr_exit_hint_trigger"]) => void): void {
         this.On("tr_exit_hint_trigger", callback);
     }
 
-    static OnTrShowFinishMsgbox(callback: (data: {}) => void): void {
+    static OnTrShowFinishMsgbox(callback: (data: GameEventDefs["tr_show_finish_msgbox"]) => void): void {
         this.On("tr_show_finish_msgbox", callback);
     }
 
-    static OnTrShowExitMsgbox(callback: (data: {}) => void): void {
+    static OnTrShowExitMsgbox(callback: (data: GameEventDefs["tr_show_exit_msgbox"]) => void): void {
         this.On("tr_show_exit_msgbox", callback);
     }
 
-
-    static OnBotTakeover(callback: (data: {
-        userid: number;
-        botid: number;
-        userid_pawn: number;
-    }) => void): void {
+    static OnBotTakeover(callback: (data: GameEventDefs["bot_takeover"]) => void): void {
         this.On("bot_takeover", callback);
     }
 
-
-    static OnJointeamFailed(callback: (data: {
-        userid: number;
-        /** @comment 0 = team_full */
-        reason: number;
-    }) => void): void {
+    static OnJointeamFailed(callback: (data: GameEventDefs["jointeam_failed"]) => void): void {
         this.On("jointeam_failed", callback);
     }
 
-    static OnTeamchangePending(callback: (data: {
-        userid: number;
-        toteam: number;
-    }) => void): void {
+    static OnTeamchangePending(callback: (data: GameEventDefs["teamchange_pending"]) => void): void {
         this.On("teamchange_pending", callback);
     }
 
-
-    static OnMaterialDefaultComplete(callback: (data: {}) => void): void {
+    static OnMaterialDefaultComplete(callback: (data: GameEventDefs["material_default_complete"]) => void): void {
         this.On("material_default_complete", callback);
     }
 
-
-    static OnSeasoncoinLevelup(callback: (data: {
-        userid: number;
-        category: number;
-        rank: number;
-    }) => void): void {
+    static OnSeasoncoinLevelup(callback: (data: GameEventDefs["seasoncoin_levelup"]) => void): void {
         this.On("seasoncoin_levelup", callback);
     }
 
-    static OnTournamentReward(callback: (data: {
-        defindex: number;
-        totalrewards: number;
-        accountid: number;
-    }) => void): void {
+    static OnTournamentReward(callback: (data: GameEventDefs["tournament_reward"]) => void): void {
         this.On("tournament_reward", callback);
     }
 
-    static OnStartHalftime(callback: (data: {}) => void): void {
+    static OnStartHalftime(callback: (data: GameEventDefs["start_halftime"]) => void): void {
         this.On("start_halftime", callback);
     }
 
-
-    static OnPlayerDecal(callback: (data: {
-        userid: number;
-        userid_pawn: number;
-    }) => void): void {
+    static OnPlayerDecal(callback: (data: GameEventDefs["player_decal"]) => void): void {
         this.On("player_decal", callback);
     }
 
-
-    static OnSurvivalTeammateRespawn(callback: (data: { userid: number }) => void): void {
+    static OnSurvivalTeammateRespawn(callback: (data: GameEventDefs["survival_teammate_respawn"]) => void): void {
         this.On("survival_teammate_respawn", callback);
     }
 
-    static OnSurvivalNoRespawnsWarning(callback: (data: { userid: number }) => void): void {
+    static OnSurvivalNoRespawnsWarning(callback: (data: GameEventDefs["survival_no_respawns_warning"]) => void): void {
         this.On("survival_no_respawns_warning", callback);
     }
 
-    static OnSurvivalNoRespawnsFinal(callback: (data: { userid: number }) => void): void {
+    static OnSurvivalNoRespawnsFinal(callback: (data: GameEventDefs["survival_no_respawns_final"]) => void): void {
         this.On("survival_no_respawns_final", callback);
     }
 
-    static OnShowSurvivalRespawnStatus(callback: (data: {
-        loc_token: string;
-        duration: number;
-        userid: number;
-        userid_pawn: number;
-    }) => void): void {
+    static OnShowSurvivalRespawnStatus(callback: (data: GameEventDefs["show_survival_respawn_status"]) => void): void {
         this.On("show_survival_respawn_status", callback);
     }
 
-
-    static OnGuardianWaveRestart(callback: (data: {}) => void): void {
+    static OnGuardianWaveRestart(callback: (data: GameEventDefs["guardian_wave_restart"]) => void): void {
         this.On("guardian_wave_restart", callback);
     }
 
-
-    static OnNavBlocked(callback: (data: {
-        area: number;
-        blocked: boolean;
-    }) => void): void {
+    static OnNavBlocked(callback: (data: GameEventDefs["nav_blocked"]) => void): void {
         this.On("nav_blocked", callback);
     }
 
-    static OnNavGenerate(callback: (data: {}) => void): void {
+    static OnNavGenerate(callback: (data: GameEventDefs["nav_generate"]) => void): void {
         this.On("nav_generate", callback);
     }
 
-
-    static OnRepostXboxAchievements(callback: (data: {
-        /** @comment splitscreen ID */
-        splitscreenplayer: number
-    }) => void): void {
+    static OnRepostXboxAchievements(callback: (data: GameEventDefs["repost_xbox_achievements"]) => void): void {
         this.On("repost_xbox_achievements", callback);
     }
 
-    static OnMbInputLockSuccess(callback: (data: {}) => void): void {
+    static OnMbInputLockSuccess(callback: (data: GameEventDefs["mb_input_lock_success"]) => void): void {
         this.On("mb_input_lock_success", callback);
     }
 
-    static OnMbInputLockCancel(callback: (data: {}) => void): void {
+    static OnMbInputLockCancel(callback: (data: GameEventDefs["mb_input_lock_cancel"]) => void): void {
         this.On("mb_input_lock_cancel", callback);
     }
 
-
-    static OnDronegunAttack(callback: (data: { userid: number }) => void): void {
+    static OnDronegunAttack(callback: (data: GameEventDefs["dronegun_attack"]) => void): void {
         this.On("dronegun_attack", callback);
     }
 
-    static OnDroneDispatched(callback: (data: {
-        userid: number;
-        priority: number;
-        drone_dispatched: number;
-    }) => void): void {
+    static OnDroneDispatched(callback: (data: GameEventDefs["drone_dispatched"]) => void): void {
         this.On("drone_dispatched", callback);
     }
 
-    static OnDroneCargoDetached(callback: (data: {
-        userid: number;
-        cargo: number;
-        delivered: boolean;
-    }) => void): void {
+    static OnDroneCargoDetached(callback: (data: GameEventDefs["drone_cargo_detached"]) => void): void {
         this.On("drone_cargo_detached", callback);
     }
 
-    static OnDroneAboveRoof(callback: (data: {
-        userid: number;
-        cargo: number;
-    }) => void): void {
+    static OnDroneAboveRoof(callback: (data: GameEventDefs["drone_above_roof"]) => void): void {
         this.On("drone_above_roof", callback);
     }
 
-
-    static OnLootCrateVisible(callback: (data: {
-        /** @comment player entindex */
-        userid: number;
-        /** @comment crate entindex */
-        subject: number;
-        /** @comment type of crate (metal, wood, or paradrop) */
-        type: string;
-    }) => void): void {
+    static OnLootCrateVisible(callback: (data: GameEventDefs["loot_crate_visible"]) => void): void {
         this.On("loot_crate_visible", callback);
     }
 
-    static OnLootCrateOpened(callback: (data: {
-        /** @comment player entindex */
-        userid: number;
-        /** @comment type of crate (metal, wood, or paradrop) */
-        type: string;
-    }) => void): void {
+    static OnLootCrateOpened(callback: (data: GameEventDefs["loot_crate_opened"]) => void): void {
         this.On("loot_crate_opened", callback);
     }
 
-    static OnOpenCrateInstr(callback: (data: {
-        /** @comment player entindex */
-        userid: number;
-        /** @comment crate entindex */
-        subject: number;
-        /** @comment type of crate (metal, wood, or paradrop) */
-        type: string;
-    }) => void): void {
+    static OnOpenCrateInstructions(callback: (data: GameEventDefs["open_crate_instr"]) => void): void {
         this.On("open_crate_instr", callback);
     }
 
-
-    static OnSmokeBeaconParadrop(callback: (data: {
-        userid: number;
-        paradrop: number;
-    }) => void): void {
+    static OnSmokeBeaconParadrop(callback: (data: GameEventDefs["smoke_beacon_paradrop"]) => void): void {
         this.On("smoke_beacon_paradrop", callback);
     }
 
-    static OnSurvivalParadropSpawn(callback: (data: { entityid: number }) => void): void {
+    static OnSurvivalParadropSpawned(callback: (data: GameEventDefs["survival_paradrop_spawn"]) => void): void {
         this.On("survival_paradrop_spawn", callback);
     }
 
-    static OnSurvivalParadropBreak(callback: (data: { entityid: number }) => void): void {
+    static OnSurvivalParadropBreak(callback: (data: GameEventDefs["survival_paradrop_break"]) => void): void {
         this.On("survival_paradrop_break", callback);
     }
 
-
-    static OnChoppersIncomingWarning(callback: (data: { global: boolean }) => void): void {
+    static OnChoppersIncomingWarning(callback: (data: GameEventDefs["choppers_incoming_warning"]) => void): void {
         this.On("choppers_incoming_warning", callback);
     }
 
-    static OnFirstbombsIncomingWarning(callback: (data: { global: boolean }) => void): void {
+    static OnFirstbombsIncomingWarning(callback: (data: GameEventDefs["firstbombs_incoming_warning"]) => void): void {
         this.On("firstbombs_incoming_warning", callback);
     }
 
-
-    static OnDzItemInteraction(callback: (data: {
-        /** @comment player entindex */
-        userid: number;
-        /** @comment crate entindex */
-        subject: number;
-        /** @comment type of crate (metal, wood, or paradrop) */
-        type: string;
-    }) => void): void {
+    static OnDzItemInteraction(callback: (data: GameEventDefs["dz_item_interaction"]) => void): void {
         this.On("dz_item_interaction", callback);
     }
 
-
-    static OnParachutePickup(callback: (data: { userid: number }) => void): void {
+    static OnParachutePickup(callback: (data: GameEventDefs["parachute_pickup"]) => void): void {
         this.On("parachute_pickup", callback);
     }
 
-    static OnParachuteDeploy(callback: (data: { userid: number }) => void): void {
+    static OnParachuteDeploy(callback: (data: GameEventDefs["parachute_deploy"]) => void): void {
         this.On("parachute_deploy", callback);
     }
 
-
-    static OnSurvivalAnnouncePhase(callback: (data: {
-        /** @comment The phase # */
-        phase: number
-    }) => void): void {
+    static OnSurvivalAnnouncePhase(callback: (data: GameEventDefs["survival_announce_phase"]) => void): void {
         this.On("survival_announce_phase", callback);
     }
 }
