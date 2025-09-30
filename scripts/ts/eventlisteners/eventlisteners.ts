@@ -1,11 +1,13 @@
-import { Instance as CSS } from "cs_script/point_script";
+import { Instance as css } from "cs_script/point_script";
 
-// usage example:
-//EventListeners.RegisterAll();
+// example usage:
+/*
+EventListeners.RegisterAll();
 
-//EventListeners.OnPlayerHurt((data) => {
-//    CSS.Msg(`player ${CSS.GetPlayerController(data.userid)?.GetPlayerName()} was hit by ${CSS.GetPlayerController(data.attacker)?.GetPlayerName()} for -${data.dmg_health} HP and -${data.dmg_armor} amor`);
-//});
+EventListeners.OnPlayerHurt((data) => {
+    css.Msg(`player ${css.GetPlayerController(data.userid)?.GetPlayerName()} was hit by ${css.GetPlayerController(data.attacker)?.GetPlayerName()} for -${data.dmg_health} HP and -${data.dmg_armor} amor`);
+});
+*/
 
 class EventListeners {
     private static registered = false;
@@ -53,7 +55,7 @@ class EventListeners {
         this.handlers.get(eventName)!.push(callback);
     }
 
-    // Server Events
+
     static OnServerSpawn(callback: (data: {
         hostname: string;
         address: string;
@@ -85,7 +87,7 @@ class EventListeners {
         this.On("server_cvar", callback);
     }
 
-    // Player Events
+
     static OnPlayerActivate(callback: (data: { userid: number }) => void): void {
         this.On("player_activate", callback);
     }
@@ -328,7 +330,7 @@ class EventListeners {
         this.On("player_sound", callback);
     }
 
-    // Team Events
+
     static OnTeamplayBroadcastAudio(callback: (data: { team: number; sound: string }) => void): void {
         this.On("teamplay_broadcast_audio", callback);
     }
@@ -353,7 +355,7 @@ class EventListeners {
         this.On("team_intro_end", callback);
     }
 
-    // Round Events
+
     static OnRoundStart(callback: (data: {
         timelimit: number;
         fraglimit: number;
@@ -436,7 +438,7 @@ class EventListeners {
         this.On("round_mvp", callback);
     }
 
-    // Game Events
+
     static OnGameInit(callback: (data: {}) => void): void {
         this.On("game_init", callback);
     }
@@ -466,7 +468,7 @@ class EventListeners {
         this.On("game_phase_changed", callback);
     }
 
-    // HLTV Events
+
     static OnHltvCameraman(callback: (data: { userid: number }) => void): void {
         this.On("hltv_cameraman", callback);
     }
@@ -553,7 +555,7 @@ class EventListeners {
         this.On("hltv_replay_status", callback);
     }
 
-    // Demo Events
+
     static OnDemoStart(callback: (data: {}) => void): void {
         this.On("demo_start", callback);
     }
@@ -569,7 +571,7 @@ class EventListeners {
         this.On("demo_skip", callback);
     }
 
-    // Map Events
+
     static OnMapShutdown(callback: (data: {}) => void): void {
         this.On("map_shutdown", callback);
     }
@@ -590,7 +592,7 @@ class EventListeners {
         this.On("difficulty_changed", callback);
     }
 
-    // Weapon Events
+
     static OnWeaponFire(callback: (data: {
         userid: number;
         weapon: string;
@@ -636,7 +638,7 @@ class EventListeners {
         this.On("weapon_zoom_rifle", callback);
     }
 
-    // Grenade Events
+
     static OnGrenadeThrown(callback: (data: {
         userid: number;
         weapon: string;
@@ -749,7 +751,7 @@ class EventListeners {
         this.On("tagrenade_detonate", callback);
     }
 
-    // Inferno Events
+
     static OnInfernoStartburn(callback: (data: {
         entityid: number;
         x: number;
@@ -777,7 +779,7 @@ class EventListeners {
         this.On("inferno_extinguish", callback);
     }
 
-    // Bomb Events
+
     static OnBombBeginplant(callback: (data: {
         userid: number;
         site: number;
@@ -852,7 +854,7 @@ class EventListeners {
         this.On("bomb_beep", callback);
     }
 
-    // Defuser Events
+
     static OnDefuserDropped(callback: (data: { entityid: number }) => void): void {
         this.On("defuser_dropped", callback);
     }
@@ -865,7 +867,7 @@ class EventListeners {
         this.On("defuser_pickup", callback);
     }
 
-    // Hostage Events
+
     static OnHostageFollows(callback: (data: {
         userid: number;
         hostage: number;
@@ -915,7 +917,7 @@ class EventListeners {
         this.On("hostage_call_for_help", callback);
     }
 
-    // VIP Events
+
     static OnVipEscaped(callback: (data: { userid: number }) => void): void {
         this.On("vip_escaped", callback);
     }
@@ -927,7 +929,7 @@ class EventListeners {
         this.On("vip_killed", callback);
     }
 
-    // Item Events
+
     static OnItemPurchase(callback: (data: {
         userid: number;
         team: number;
@@ -989,7 +991,7 @@ class EventListeners {
         this.On("item_schema_initialized", callback);
     }
 
-    // Ammo Events
+
     static OnAmmoPickup(callback: (data: {
         userid: number;
         item: string;
@@ -1005,7 +1007,7 @@ class EventListeners {
         this.On("ammo_refill", callback);
     }
 
-    // Zone Events
+
     static OnEnterBuyzone(callback: (data: {
         userid: number;
         canbuy: boolean;
@@ -1048,7 +1050,7 @@ class EventListeners {
         this.On("buytime_ended", callback);
     }
 
-    // Silencer Events
+
     static OnSilencerOff(callback: (data: { userid: number }) => void): void {
         this.On("silencer_off", callback);
     }
@@ -1064,7 +1066,7 @@ class EventListeners {
         this.On("silencer_detach", callback);
     }
 
-    // Buy Menu Events
+
     static OnBuymenuOpen(callback: (data: { userid: number }) => void): void {
         this.On("buymenu_open", callback);
     }
@@ -1073,7 +1075,7 @@ class EventListeners {
         this.On("buymenu_close", callback);
     }
 
-    // Inspect Events
+
     static OnInspectWeapon(callback: (data: {
         userid: number;
         userid_pawn: number;
@@ -1081,7 +1083,7 @@ class EventListeners {
         this.On("inspect_weapon", callback);
     }
 
-    // Other Combat Events
+
     static OnOtherDeath(callback: (data: {
         otherid: number;
         othertype: string;
@@ -1125,7 +1127,7 @@ class EventListeners {
         this.On("bullet_flight_resolution", callback);
     }
 
-    // Door Events
+
     static OnDoorClose(callback: (data: {
         userid: number;
         checkpoint: boolean;
@@ -1163,7 +1165,7 @@ class EventListeners {
         this.On("door_open", callback);
     }
 
-    // Break Events
+
     static OnBreakBreakable(callback: (data: {
         entindex: number;
         userid: number;
@@ -1190,7 +1192,7 @@ class EventListeners {
         this.On("broken_breakable", callback);
     }
 
-    // Entity Events
+
     static OnEntityKilled(callback: (data: {
         entindex_killed: number;
         entindex_attacker: number;
@@ -1209,7 +1211,7 @@ class EventListeners {
         this.On("entity_visible", callback);
     }
 
-    // Vote Events
+
     static OnVoteStarted(callback: (data: {
         issue: string;
         param1: string;
@@ -1291,7 +1293,7 @@ class EventListeners {
         this.On("enable_restart_voting", callback);
     }
 
-    // Achievement Events
+
     static OnAchievementEvent(callback: (data: {
         achievement_name: string;
         cur_val: number;
@@ -1322,7 +1324,7 @@ class EventListeners {
         this.On("achievement_info_loaded", callback);
     }
 
-    // Bonus Events
+
     static OnBonusUpdated(callback: (data: {
         numadvanced: number;
         numbronze: number;
@@ -1332,7 +1334,7 @@ class EventListeners {
         this.On("bonus_updated", callback);
     }
 
-    // Spectator Events
+
     static OnSpecTargetUpdated(callback: (data: {
         userid: number;
         target: number;
@@ -1345,7 +1347,7 @@ class EventListeners {
         this.On("spec_mode_updated", callback);
     }
 
-    // Game Instructor Events
+
     static OnGameinstructorDraw(callback: (data: {}) => void): void {
         this.On("gameinstructor_draw", callback);
     }
@@ -1412,7 +1414,7 @@ class EventListeners {
         this.On("set_instructor_group_enabled", callback);
     }
 
-    // Misc Events
+
     static OnPhysgunPickup(callback: (data: { target: number }) => void): void {
         this.On("physgun_pickup", callback);
     }
@@ -1425,12 +1427,12 @@ class EventListeners {
         this.On("helicopter_grenade_punt_miss", callback);
     }
 
-    // Finale Events
+
     static OnFinaleStart(callback: (data: { rushes: number }) => void): void {
         this.On("finale_start", callback);
     }
 
-    // User Data Events
+
     static OnUserDataDownloaded(callback: (data: {}) => void): void {
         this.On("user_data_downloaded", callback);
     }
@@ -1451,12 +1453,12 @@ class EventListeners {
         this.On("write_profile_data", callback);
     }
 
-    // Ragdoll Events
+
     static OnRagdollDissolved(callback: (data: { entindex: number }) => void): void {
         this.On("ragdoll_dissolved", callback);
     }
 
-    // Inventory Events
+
     static OnInventoryUpdated(callback: (data: {}) => void): void {
         this.On("inventory_updated", callback);
     }
@@ -1477,22 +1479,22 @@ class EventListeners {
         this.On("event_ticket_modified", callback);
     }
 
-    // GC Events
+
     static OnGcConnected(callback: (data: {}) => void): void {
         this.On("gc_connected", callback);
     }
 
-    // Shadow Events
+
     static OnDynamicShadowLightChanged(callback: (data: {}) => void): void {
         this.On("dynamic_shadow_light_changed", callback);
     }
 
-    // UI Events
+
     static OnGameuiHidden(callback: (data: {}) => void): void {
         this.On("gameui_hidden", callback);
     }
 
-    // Gift Events
+
     static OnItemsGifted(callback: (data: {
         player: number;
         itemdef: number;
@@ -1503,12 +1505,12 @@ class EventListeners {
         this.On("items_gifted", callback);
     }
 
-    // Warmup Events
+
     static OnWarmupEnd(callback: (data: {}) => void): void {
         this.On("warmup_end", callback);
     }
 
-    // CS Specific Events
+
     static OnAnnouncePhaseEnd(callback: (data: {}) => void): void {
         this.On("announce_phase_end", callback);
     }
@@ -1559,7 +1561,7 @@ class EventListeners {
         this.On("cs_prev_next_spectator", callback);
     }
 
-    // Death Panel Events
+
     static OnShowDeathpanel(callback: (data: {
         victim: number;
         killer: number;
@@ -1577,7 +1579,7 @@ class EventListeners {
         this.On("hide_deathpanel", callback);
     }
 
-    // UGC Events
+
     static OnUgcMapInfoReceived(callback: (data: { published_file_id: string }) => void): void {
         this.On("ugc_map_info_received", callback);
     }
@@ -1604,7 +1606,7 @@ class EventListeners {
         this.On("ugc_file_download_start", callback);
     }
 
-    // Match Events
+
     static OnBeginNewMatch(callback: (data: {}) => void): void {
         this.On("begin_new_match", callback);
     }
@@ -1646,7 +1648,7 @@ class EventListeners {
         this.On("nextlevel_changed", callback);
     }
 
-    // Deathmatch Events
+
     static OnDmBonusWeaponStart(callback: (data: {
         time: number;
         Pos: number;
@@ -1654,7 +1656,7 @@ class EventListeners {
         this.On("dm_bonus_weapon_start", callback);
     }
 
-    // Gun Game Events
+
     static OnGgKilledEnemy(callback: (data: {
         victimid: number;
         attackerid: number;
@@ -1665,7 +1667,7 @@ class EventListeners {
         this.On("gg_killed_enemy", callback);
     }
 
-    // Team Switch Events
+
     static OnSwitchTeam(callback: (data: {
         numPlayers: number;
         numSpectators: number;
@@ -1676,17 +1678,17 @@ class EventListeners {
         this.On("switch_team", callback);
     }
 
-    // Trial Events
+
     static OnTrialTimeExpired(callback: (data: { userid: number }) => void): void {
         this.On("trial_time_expired", callback);
     }
 
-    // Matchmaking Events
+
     static OnUpdateMatchmakingStats(callback: (data: {}) => void): void {
         this.On("update_matchmaking_stats", callback);
     }
 
-    // Client Events
+
     static OnClientDisconnect(callback: (data: {}) => void): void {
         this.On("client_disconnect", callback);
     }
@@ -1695,7 +1697,7 @@ class EventListeners {
         this.On("client_loadout_changed", callback);
     }
 
-    // Sonar Events
+
     static OnAddPlayerSonarIcon(callback: (data: {
         userid: number;
         pos_x: number;
@@ -1722,7 +1724,7 @@ class EventListeners {
         this.On("add_bullet_hit_marker", callback);
     }
 
-    // SFUI Events
+
     static OnSfuievent(callback: (data: {
         action: string;
         data: string;
@@ -1731,7 +1733,7 @@ class EventListeners {
         this.On("sfuievent", callback);
     }
 
-    // Weapon HUD Events
+
     static OnWeaponhudSelection(callback: (data: {
         userid: number;
         mode: number;
@@ -1741,7 +1743,7 @@ class EventListeners {
         this.On("weaponhud_selection", callback);
     }
 
-    // Training Events
+
     static OnTrPlayerFlashbanged(callback: (data: { userid: number }) => void): void {
         this.On("tr_player_flashbanged", callback);
     }
@@ -1766,7 +1768,7 @@ class EventListeners {
         this.On("tr_show_exit_msgbox", callback);
     }
 
-    // Bot Events
+
     static OnBotTakeover(callback: (data: {
         userid: number;
         botid: number;
@@ -1775,7 +1777,7 @@ class EventListeners {
         this.On("bot_takeover", callback);
     }
 
-    // Team Join Events
+
     static OnJointeamFailed(callback: (data: {
         userid: number;
         reason: number;
@@ -1790,12 +1792,12 @@ class EventListeners {
         this.On("teamchange_pending", callback);
     }
 
-    // Material Events
+
     static OnMaterialDefaultComplete(callback: (data: {}) => void): void {
         this.On("material_default_complete", callback);
     }
 
-    // Season Events
+
     static OnSeasoncoinLevelup(callback: (data: {
         userid: number;
         category: number;
@@ -1816,7 +1818,7 @@ class EventListeners {
         this.On("start_halftime", callback);
     }
 
-    // Decal Events
+
     static OnPlayerDecal(callback: (data: {
         userid: number;
         userid_pawn: number;
@@ -1824,7 +1826,7 @@ class EventListeners {
         this.On("player_decal", callback);
     }
 
-    // Survival Events
+
     static OnSurvivalTeammateRespawn(callback: (data: { userid: number }) => void): void {
         this.On("survival_teammate_respawn", callback);
     }
@@ -1846,12 +1848,12 @@ class EventListeners {
         this.On("show_survival_respawn_status", callback);
     }
 
-    // Guardian Events
+
     static OnGuardianWaveRestart(callback: (data: {}) => void): void {
         this.On("guardian_wave_restart", callback);
     }
 
-    // Navigation Events
+
     static OnNavBlocked(callback: (data: {
         area: number;
         blocked: boolean;
@@ -1863,7 +1865,7 @@ class EventListeners {
         this.On("nav_generate", callback);
     }
 
-    // Xbox Events
+
     static OnRepostXboxAchievements(callback: (data: { splitscreenplayer: number }) => void): void {
         this.On("repost_xbox_achievements", callback);
     }
@@ -1876,10 +1878,3 @@ class EventListeners {
         this.On("mb_input_lock_cancel", callback);
     }
 }
-
-// usage example:
-EventListeners.RegisterAll();
-
-EventListeners.OnPlayerHurt((data) => {
-    CSS.Msg(`player ${CSS.GetPlayerController(data.userid)?.GetPlayerName()} was hit by ${CSS.GetPlayerController(data.attacker)?.GetPlayerName()} for -${data.dmg_health} HP and -${data.dmg_armor} amor`);
-});
