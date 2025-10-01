@@ -6,11 +6,11 @@ import { Vec3 } from "@s2ze/math";
  * for singleplayer maps. This does not work in multiplayer.
  * 
  * usage:
- * - import { Blips } from "./blips/blips";
- * - add `update(currentGametime: number)` inside your think loop
- * - call `print(text: string, soundName?: string)` show a blip message
+ * - import { blips } from "./blips/blips";
+ * - add `blips.update(currentGametime: number)` inside your think loop
+ * - call `blips.print(text: string, soundName?: string)` to show a blip message
  */
-export class Blips {
+class Blips {
     private static readonly oneTick = 0.015625;
     private static readonly beepSound = "Buttons.snd9";
 
@@ -30,7 +30,7 @@ export class Blips {
      * @param text the message text, supports color tags like {red}, {green}, etc
      * @param soundName optional soundevent to play when message is added
      */
-    print(text: string, soundName: string = Blips.beepSound , soundPos?: Vector) {
+    print(text: string, soundName: string = Blips.beepSound, soundPos?: Vector) {
         const gameTime = css.GetGameTime();
         const messageId = this.nextMessageId++;
 
@@ -182,5 +182,6 @@ export class Blips {
     private static easeInCubic(t: number): number {
         return t * t * t;
     }
-
 }
+
+export const blips = new Blips();
