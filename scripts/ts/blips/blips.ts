@@ -1,5 +1,4 @@
 import { Instance as css, Vector } from "cs_script/point_script";
-import { Vec3 } from "@s2ze/math";
 
 /**
  * blips are a silly substitute for colored chat messages
@@ -48,7 +47,7 @@ class Blips {
         }
 
         this.chatMessages.unshift(message);
-        this.playSound(soundName || Blips.beepSound, soundPos || Vec3.Zero);
+        this.playSound(soundName || Blips.beepSound, soundPos || {x: 0, y: 0, z: 0});
     }
 
     /**
@@ -122,7 +121,7 @@ class Blips {
         }
     }
 
-    private playSound(soundName: string, pos: Vector = Vec3.Zero) {
+    private playSound(soundName: string, pos: Vector = {x: 0, y: 0, z: 0}) {
         css.ServerCommand(`snd_sos_start_soundevent_at_pos ${soundName} ${pos.x} ${pos.y} ${pos.z}`);
     }
 
@@ -185,3 +184,4 @@ class Blips {
 }
 
 export const blips = new Blips();
+
