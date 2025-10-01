@@ -1,9 +1,7 @@
 import { Instance as css } from "cs_script/point_script";
 import { EventListeners } from '../eventlisteners/eventlisteners';
-import { Blips } from "../blips/blips";
+import { blips } from "../blips/blips";
 import { HitGroup } from "../enums/hitgroups";
-
-const blips = new Blips();
 
 css.OnActivate(() => {
     EventListeners.RegisterAll();
