@@ -47,7 +47,7 @@ class Blips {
         }
 
         this.chatMessages.unshift(message);
-        this.playSound(soundName || Blips.beepSound, soundPos || {x: 0, y: 0, z: 0});
+        this.playSound(soundName, soundPos ?? { x: 0, y: 0, z: 0});
     }
 
     /**
@@ -55,7 +55,7 @@ class Blips {
      * call this from inside your think loop with current game time passed into it
      * @param gameTime current game time from Instance.GetGameTime()
      */
-    update(gameTime: number) {
+    update(gameTime: number): void {
         const flyInDuration = 0.5;
         const displayDuration = 8;
         const flyOutDuration = 0.5;
@@ -103,13 +103,13 @@ class Blips {
 
                     const segmentColor = { ...segment.color, a: alpha };
 
-                    css.DebugScreenText(
-                        displayText,
-                        xOffset,
-                        msg.currentY,
-                        Blips.oneTick,
-                        segmentColor
-                    );
+                    css.DebugScreenText( {
+                        text: displayText,
+                        x: xOffset,
+                        y: msg.currentY,
+                        duration: Blips.oneTick,
+                        color: segmentColor
+                    });
 
                     xOffset += displayText.length * 7;
                 }
@@ -121,7 +121,7 @@ class Blips {
         }
     }
 
-    private playSound(soundName: string, pos: Vector = {x: 0, y: 0, z: 0}) {
+    private playSound(soundName: string, pos: Vector): void {
         css.ServerCommand(`snd_sos_start_soundevent_at_pos ${soundName} ${pos.x} ${pos.y} ${pos.z}`);
     }
 
@@ -184,4 +184,3 @@ class Blips {
 }
 
 export const blips = new Blips();
-
