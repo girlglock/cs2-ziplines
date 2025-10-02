@@ -97,11 +97,6 @@ interface GameEventDefs {
         userid_pawn: number;
         attacker_pawn: number;
     };
-    player_chat: {
-        teamonly: boolean;
-        userid: number;
-        text: string;
-    };
     local_player_pawn_changed: {};
     player_stats_updated: {
         forceupload: boolean;
@@ -1245,7 +1240,9 @@ export class EventListeners {
     static OnServerCvar(callback: (data: GameEventDefs["server_cvar"]) => void): void {
         this.On("server_cvar", callback);
     }
-
+    /**
+    * @deprecated Use `Instance.OnPlayerActivate` instead.
+    */
     static OnPlayerActivate(callback: (data: GameEventDefs["player_activate"]) => void): void {
         this.On("player_activate", callback);
     }
@@ -1257,11 +1254,15 @@ export class EventListeners {
     static OnPlayerFullUpdate(callback: (data: GameEventDefs["player_full_update"]) => void): void {
         this.On("player_full_update", callback);
     }
-
+    /**
+    * @deprecated Use `Instance.OnPlayerConnect` instead.
+    */
     static OnPlayerConnect(callback: (data: GameEventDefs["player_connect"]) => void): void {
         this.On("player_connect", callback);
     }
-
+    /**
+    * @deprecated Use `Instance.OnPlayerDisconnect` instead.
+    */
     static OnPlayerDisconnect(callback: (data: GameEventDefs["player_disconnect"]) => void): void {
         this.On("player_disconnect", callback);
     }
@@ -1294,10 +1295,6 @@ export class EventListeners {
         this.On("player_hurt", callback);
     }
 
-    static OnPlayerChat(callback: (data: GameEventDefs["player_chat"]) => void): void {
-        this.On("player_chat", callback);
-    }
-
     static OnLocalPlayerPawnChanged(callback: (data: GameEventDefs["local_player_pawn_changed"]) => void): void {
         this.On("local_player_pawn_changed", callback);
     }
@@ -1321,7 +1318,9 @@ export class EventListeners {
     static OnPlayerSpawned(callback: (data: GameEventDefs["player_spawned"]) => void): void {
         this.On("player_spawned", callback);
     }
-
+    /**
+    * @deprecated Use `Instance.OnPlayerJump` instead.
+    */
     static OnPlayerJump(callback: (data: GameEventDefs["player_jump"]) => void): void {
         this.On("player_jump", callback);
     }
@@ -1357,7 +1356,9 @@ export class EventListeners {
     static OnPlayerGivenC4(callback: (data: GameEventDefs["player_given_c4"]) => void): void {
         this.On("player_given_c4", callback);
     }
-
+    /**
+    * @deprecated Use `Instance.OnPlayerPing` instead.
+    */
     static OnPlayerPing(callback: (data: GameEventDefs["player_ping"]) => void): void {
         this.On("player_ping", callback);
     }
@@ -1393,7 +1394,9 @@ export class EventListeners {
     static OnTeamIntroEnd(callback: (data: GameEventDefs["team_intro_end"]) => void): void {
         this.On("team_intro_end", callback);
     }
-
+    /**
+    * @deprecated Use `Instance.OnRoundStart` instead.
+    */
     static OnRoundStart(callback: (data: GameEventDefs["round_start"]) => void): void {
         this.On("round_start", callback);
     }
@@ -1561,7 +1564,9 @@ export class EventListeners {
     static OnDifficultyChanged(callback: (data: GameEventDefs["difficulty_changed"]) => void): void {
         this.On("difficulty_changed", callback);
     }
-
+    /**
+     * @deprecated Use `Instance.OnGunFire` instead. for meelee weapons use `Instance.OnKnifeAttack`
+     */
     static OnWeaponFire(callback: (data: GameEventDefs["weapon_fire"]) => void): void {
         this.On("weapon_fire", callback);
     }
@@ -1573,7 +1578,9 @@ export class EventListeners {
     static OnWeaponOutofammo(callback: (data: GameEventDefs["weapon_outofammo"]) => void): void {
         this.On("weapon_outofammo", callback);
     }
-
+    /**
+    * @deprecated Use `Instance.OnGunReload` instead.
+    */
     static OnWeaponReload(callback: (data: GameEventDefs["weapon_reload"]) => void): void {
         this.On("weapon_reload", callback);
     }
@@ -1585,11 +1592,15 @@ export class EventListeners {
     static OnWeaponZoomRifle(callback: (data: GameEventDefs["weapon_zoom_rifle"]) => void): void {
         this.On("weapon_zoom_rifle", callback);
     }
-
+    /**
+    * @deprecated Use `Instance.OnGrenadeThrow` instead.
+    */
     static OnGrenadeThrown(callback: (data: GameEventDefs["grenade_thrown"]) => void): void {
         this.On("grenade_thrown", callback);
     }
-
+    /**
+    * @deprecated Use `Instance.OnGrenadeBounce` instead.
+    */
     static OnGrenadeBounce(callback: (data: GameEventDefs["grenade_bounce"]) => void): void {
         this.On("grenade_bounce", callback);
     }
@@ -1817,7 +1828,9 @@ export class EventListeners {
     static OnOtherDeath(callback: (data: GameEventDefs["other_death"]) => void): void {
         this.On("other_death", callback);
     }
-
+    /**
+    * @deprecated Use `Instance.OnBulletImpact` instead.
+    */
     static OnBulletImpact(callback: (data: GameEventDefs["bullet_impact"]) => void): void {
         this.On("bullet_impact", callback);
     }
